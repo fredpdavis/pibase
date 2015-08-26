@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>Introduction - PIBASE</title>
+<LINK title="marcius style" media=screen href="style/styles.css" type=text/css rel=StyleSheet>
+<LINK REL="SHORTCUT ICON" HREF="figs/pibase.ico">
+</head>
+
+<DIV class=bodytext>
+<table width=65% align="center" border="0" width=100%>
+<tr>
+<td valign="center" align="right">
+<IMG height=50 width=50 SRC="figs/pibase_blue_web.png" BORDER=0>
+<DIV class=large><B>PIBASE v2010</font></B></DIV>
+</td>
+<td align="left">
+<a href="queries.html">Queries</a> <a href="queries_detailed.html">(detailed)</a> |
+<B>Introduction</B> |
+<a href="statistics.html">Statistics</a> |
+<a href="download.html">Download</a> |
+<a href="http://research.janelia.org/davis/projects.html">related work</a>
+</td>
+</tr>
+</table>
+</DIV>
+<br>
+
+
+<table width=75% align=center>
+<td>
+<p><DIV class=large><B>What is PIBASE?</B></DIV>
+
+<DIV class=bodytext>
+PIBASE is a collection of all protein structural interfaces extracted from the <a href="http://www.rcsb.org/pdb">Protein Data Bank</a> and <a href="http://www.ebi.ac.uk/msd-srv/prot_int/pistart.html">PISA</a> structure databases. Both chain-chain and domain-domain (<a href="http://scop.mrc-lmb.cam.ac.uk/scop/">SCOP</a> and <a href="http://www.cathdb.info">CATH</a> definitions) interfaces are detected. A series of properties are then computed for each domain, interface, and complex. The database schema is available <a href="files/PIBASE_schema.pdf">here</a>. PIBASE is developed at <a href="http://pibase.janelia.org">http://pibase.janelia.org</a>, with a mirror maintained at <a href="http://salilab.org/pibase">http://salilab.org/pibase</a>.
+</DIV>
+
+<p><DIV class=large><B>Data Sources</B></DIV>
+<p>
+<table frame=hsides>
+<tr><th><DIV class=bodytext>database</DIV></th><th><DIV class=bodytext>version</DIV></th><th><DIV class=bodytext>data type</DIV></th><tr>
+<tr><td><DIV class=bodytext><a href="http://www.rcsb.org/pdb">PDB</a></DIV></td><td><DIV class=bodytext>Sep 2010</DIV></td><td><DIV class=bodytext>protein structures</DIV></td></tr>
+<tr><td><DIV class=bodytext><a href="http://www.ebi.ac.uk/msd-srv/prot_int/pistart.html">PISA</a></DIV></td><td><DIV class=bodytext>Sep 2010</DIV></td><td><DIV class=bodytext>predicted quaternary protein structures</DIV></td></tr>
+<tr><td><DIV class=bodytext><a href="http://scop.mrc-lmb.cam.ac.uk/scop/">SCOP</a></DIV></td><td><DIV class=bodytext>1.75</DIV></td><td><DIV class=bodytext>domain definitions, classification</DIV></td></tr>
+<tr><td><DIV class=bodytext><a href="http://www.cathdb.info">CATH</a></DIV></td><td><DIV class=bodytext>3.3.0</DIV></td><td><DIV class=bodytext>domain definitions, classification</DIV></td></tr>
+</table>
+
+<p><DIV class=large><B>Searching PIBASE</B></DIV>
+<DIV class=bodytext>
+This web interface provides basic search functionality for the database - allowing complex-, interface-, and domain- centric searches. More sophisticated searches can be done by installing a local version of the database and querying it via mysql or the provided perl interface.<br>
+</DIV>
+
+<p><DIV class=large><B>Viewing structures in PIBASE</B></DIV>
+<DIV class=bodytext>
+<a href="http://openrasmol.org/OpenRasMol.html#Software">Rasmol</a> scripts are provided for viewing the individual interfaces. This <a href="rasscript.sh">script</a> can be used as a rasmol script viewer (in UNIX). The rasmol scripts may also be run on windows machines using "raswin.exe -script <i>scriptname</i>". For help on setting up rasmol as a browser helper please follow <a href="http://www.biochem.ucl.ac.uk/bsm/pdbsum/viewers.html">this external link</a>.
+</DIV>
+
+<p><DIV class=large><B>Predictions</B></DIV>
+<DIV class=bodytext>
+The interfaces stored in PIBASE have been used to predict protein-protein interactions both within species (S cerevisiae, available at <a href="http://salilab.org/modbase">MODBASE</a>; <a href="http://nar.oxfordjournals.org/cgi/content/full/34/10/2943">Davis, <i>et al. Nucleic Acids Res</i> 2006</a>) and between species (human and 10 pathogens, available <a href="http://salilab.org/hostpathogen">here</a>; <a href="http://dx.doi.org/10.1110/ps.073228407">Davis, <i>et al. Protein Sci</i>. 2007</a>).
+</DIV>
+
+
+<p><DIV class=large><B>External Software</B></DIV>
+<DIV class=bodytext>
+<ul>
+<li><a href="http://bioinformatics.icmb.utexas.edu/lgl/">LGL</a> (<a href="http://dx.doi.org/10.1016/j.jmb.2004.04.047">Adai, <i>et al</i>. <i>J Mol Biol</i> 2004</a>) is used for all graph layouts. The LGL coordinates are written out to postscript and then converted to PNG using <a href="www.imagemagick.org">ImageMagick</a>.</li>
+<li><a href="http://salilab.org/modeller">MODELLER</a> (<a href="http://dx.doi.org/10.1006/jmbi.1993.1626"> Sali and Blundell. <i>J Mol Biol</i> 1994</a>) is used to compute solvent accessible surface areas</li>
+<li><a href="http://swift.cmbi.kun.nl/swift/dssp/">DSSP</a> (<a href="http://dx.doi.org/10.1002/bip.360221211">Kabsch and Sander. <i>Biopolymers</i> 1983</a>) is used for secondary structure assignment.</li>
+</ul>
+</DIV>
+
+
+<p><DIV class=large><B>Citing PIBASE</B></DIV>
+<DIV class=bodytext>
+<p>
+PIBASE: a comprehensive database of structurally defined protein interfaces. Davis FP, Sali A. Bioinformatics (2005) 21(0): 1901-1907.<a href="http://dx.doi.org/10.1093/bioinformatics/bti277">link</a>. <a href="suppinfo/supplementary_info.pdf">Supplementary Information</a>.
+</DIV>
+
+</td>
+</table>
+
+<DIV class=bodytext><a href="http://research.janelia.org/davis">davisf</a> at <a href ="http://hhmi.org/janelia">janelia</a> dot hhmi dot org</strong></DIV>
+</body>
+</html>

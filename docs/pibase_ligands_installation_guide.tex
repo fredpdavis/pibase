@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\usepackage[nohead,margin=2cm,includefoot]{geometry}
+\geometry{verbose,letterpaper,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\title{PIBASE.ligands installation guide. ver 200905\\
+\includegraphics*[viewport=469 329 559 415,scale=0.5]{pilig_web_logo.pdf}}
+\author{Fred P. Davis, HHMI-JFRC\\{\tt davisf@janelia.hhmi.org}\\\url{http://pibase.janelia.org}}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document describes how to set up a local PIBASE.ligands installation.
+\end{abstract}
+
+PIBASE.ligands can be installed locally on top of an existing PIBASE (v200808) installation by downloading the database tables from \url{http://pibase.janelia.org/ligands_download.html}. In addition to this MySQL interface, a software package is also available that enables a web interface to the database.
+
+The database schema is described here: \url{http://pibase.janelia.org/files/pibase_schema_v200905.pdf}
+
+\section{Downloading data}
+
+All PIBASE.ligands files are available for download at \url{http://pibase.janelia.org/ligands_download.html} under the GPL license.
+
+\subsection{MySQL data dump}
+
+PIBASE.ligands installation {\em requires} a working PIBASE installation ( \url{http://pibase.janelia.org/files/pibase_installation_guide.pdf} ). Once you have the PIBASE database installed, download the PIBASE.ligands MySQL dump ( pibase\_ligands\_dump.20090519.out.gz ) and load it into the PIBASE database:
+
+\begin{verbatim}
+zcat pibase_ligands_dump.20090518.out.gz | mysql -u YOURUSERNAME -p YOURDATABASENAME
+\end{verbatim}
+
+\section{Web interface}
+
+To install the web interface to the PIBASE.ligands database, you must first have a working PIBASE web server installed. Once you have the PIBASE web interface installed, download the PIBASE.ligands web server package (pibase\_ligands\_src\_v200905.tar.gz) and uncompress it in a temporary directory:
+
+\begin{verbatim}
+cd yourinstalldirectory
+tar xvfz pibase_ligands_src_200905.tar.gz
+\end{verbatim}
+
+Next, there are a few lines to edit in pibase.pm to reflect your database specifications and local directory structure. Then, just copy over the html, cgi-bin, and perl library to your webserver, and it should be ready to query.
+
+In detail:
+
+\begin{enumerate}
+\item Edit pibase.pm to reflect your MySQL database speccs. ($~$ src/perl\_api/pibase.pm lines 57-60).
+
+\begin{verbatim}
+my $pibase_specs = {
+   db => 'pibasemysqldatabasename',
+   host => 'mysqlserverhostname',
+   user => 'pibaseusername' ,
+   pass => 'pibasepassword',
+   root => 'doesntmatterforthewebserver',
+}
+\end{verbatim}
+
+If you have a non-standard mysql installation, you can also specify a {\tt mysql\_socket} key that points to the mysql socket to be used by the perl DBI mysql interface.
+
+\item Edit pibase.pm to reflect the html and cgi-bin directories of your web server. ($~$ src/perl\_api/pibase.pm lines 216, 217).
+\begin{verbatim}
+   $pibase_specs->{web_pilig}->{html_dir} = "/var/www/websites/pibase/html/" ;
+   $pibase_specs->{web_pilig}->{cgi_dir} = "/var/www/websites/pibase/cgi-bin/" ;
+\end{verbatim}
+
+\item Edit pibase.pm to reflect the correct URLS for the html and cgi-bin directories of your web server. ($~$ src/perl\_api/pibase.pm lines 219, 220).
+\begin{verbatim}
+   $pibase_specs->{web_pilig}->{base_url} = "http://localhost/pibase";
+   $pibase_specs->{web_pilig}->{basecgi_url} = "http://localhost/pibase-cgi";
+\end{verbatim}
+
+\item Edit pibase.pm to reflect the directories where you uncompressed the bdp\_topology\_graphs and subsets\_files tar files for the original PIBASE web server. ($~$ src/perl\_api/pibase.pm lines 209, 213).
+\begin{verbatim}
+   $pibase_specs->{web_pilig}->{bdp_topology_graphs_baseurl} =
+      $pibase_specs->{web_pilig}->{base_url}.'/data_files/bdp_topology_graphs' 
+
+   $pibase_specs->{web_pilig}->{subsets_files_basedir} =
+      $pibase_specs->{web_pilig}->{html_dir}.'/data_files/subsets_files' ;
+\end{verbatim}
+
+\item The static html pages (web/html/*.html) assume that the CGI directory sits ../cgi-bin relative to the html directory; if this isn't true for your webserver, edit the form submit lines in the html pages to reflect the path to your CGI directory
+
+\item Lastly, copy the contents of the html, cgi, and perl\_api directories to your webserver
+\begin{verbatim}
+   cp -r web/html/* yourwebserver/html
+   cp -r web/cgi-bin/* yourwebserver/cgi-bin
+   cp -r src/perl_api yourwebserver/cgi-bin/perl_lib
+\end{verbatim}
+\end{enumerate}
+
+That should be it, the webserver should be functional now.
+
+\end{document}

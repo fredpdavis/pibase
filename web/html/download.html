@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>Download - PIBASE</title>
+<LINK title="marcius style" media=screen href="style/styles.css" type=text/css rel=StyleSheet>
+<LINK REL="SHORTCUT ICON" HREF="figs/pibase.ico">
+</head>
+
+<DIV class=bodytext>
+<table width=65% align="center" border="0" width=100%>
+<tr>
+<td valign="center" align="right">
+<IMG height=50 width=50 SRC="figs/pibase_blue_web.png" BORDER=0>
+<DIV class=large><B>PIBASE v2010</font></B></DIV>
+</td>
+<td align="left">
+<a href="queries.html">Queries</a> <a href="queries_detailed.html">(detailed)</a> |
+<a href="introduction.html">Introduction</a> |
+<a href="statistics.html">Statistics</a> |
+<B>Download</B> |
+<a href="http://research.janelia.org/davis/projects.html">related work</a>
+</td>
+</tr>
+</table>
+</DIV>
+<br>
+
+<table width=75% align=center>
+<td>
+
+<DIV class=bodytext>
+You can install PIBASE locally by either downloading the compiled database or downloading the software package and building your own version. The installation process is described here: <a href="http://pibase.janelia.org/pibase2010/files/pibase_installation_guide.pdf">pibase_installation_guide.pdf</a><p>
+</DIV>
+
+<p><DIV class=large><B>Downloading PIBASE</B></DIV>
+
+<DIV class=bodytext>
+PIBASE is made available under the <a href="http://www.gnu.org/licenses/gpl.txt">GPL license</a>.
+<p>
+
+The PIBASE database is composed of a mysql database and compressed text files stored on disk. You probably do not need all of the compressed files for your purposes. Read the <a href="http://pibase.janelia.org/pibase2010/files/pibase_installation_guide.pdf">installation guide</a> for details on what to download. For example, for mysql queries, all you need is the mysql dump. For a web server, you would also need the software package, the domain structure files, and the complex interaction topology graphs.
+</DIV>
+<p>
+
+<table frame=hsides>
+<tr><th colspan=2 align=left><DIV class=bodytext>software</DIV></th></tr>
+<tr><td><DIV class=bodytext>PIBASE software package (14 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/pibase_src_v2010.tar.gz">pibase_src_v2010.tar.gz</a></DIV></td></tr>
+<tr><th colspan=2 align=left><DIV class=bodytext>mysql data</DIV></th></tr>
+<tr><td><DIV class=bodytext>PIBASE mysql dump (314 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/pibase2010_dump.20100918.out.gz">pibase2010_dump.20100918.out.gz</a></DIV></td></tr>
+<tr><th colspan=2 align=left><DIV class=bodytext>tables on disk</DIV></th></tr>
+<tr><td><DIV class=bodytext>Residue listing for each structure (592 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/bdp_residues.pibase_20100918.tar">bdp_residues.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Secondary structure assignment for each structure (483 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/bdp_sec_strx.pibase_20100918.tar">bdp_sec_strx.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Contacts between residues in each binding site (2.99 GB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/bindingsite_contacts.pibase_20100918.tar">bindingsite_contacts.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Contacts between secondary structure elements in each binding site (530 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/bindingsite_secstrx_basic_contacts.pibase_20100918.tar">bindingsite_secstrx_basic_contacts.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Contacts between residues across each interface (952 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/interface_contacts.pibase_20100918.tar">interface_contacts.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>"Special" contacts between residues across each interface (<i>eg</i> H-bonds, SS-bridges) (161 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/interface_contacts_special.pibase_20100918.tar">interface_contacts_special.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Contacts between basic secondary structure elements across each interface (246 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/interface_secstrx_basic_contacts.pibase_20100918.tar">interface_secstrx_basic_contacts.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Contacts between detailed secondary structure elements across each interface (252 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/interface_secstrx_contacts.pibase_20100918.tar">interface_secstrx_contacts.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Secondary structure content at each interface (1.8 GB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/interface_secstrx.pibase_20100918.tar">interface_secstrx.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Residues in each patch (spatially contiguous subsets of binding sites) (318 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/patch_residues.pibase_20100918.tar">patch_residues.pibase_20100918.tar</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Residue listing for each domain (775 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/subsets_residues.pibase_20100918.tar">subsets_residues.pibase_20100918.tar</a></DIV></td></tr>
+
+<tr><th colspan=2 align=left><DIV class=bodytext>webserver required files</DIV></th></tr>
+<tr><td><DIV class=bodytext>Complex interaction topology graphs (583 MB)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/bdp_topology_graphs.pibase_20100918.tar.gz">bdp_topology_graphs.pibase_20100918.tar.gz</a></DIV></td></tr>
+<tr><td><DIV class=bodytext>Domain structure files (<B>23.3 GB</B>)</DIV></td><td><DIV class=bodytext><a href="http://pibase.janelia.org/download/pibase2010/subsets_files.pibase_20100918.tar">subsets_files.pibase_20100918.tar</a></DIV></td></tr>
+</table>
+
+<p><DIV class=large><B>Installing PIBASE locally</B></DIV>
+
+<DIV class=bodytext>
+The installation process is described here: <a href="http://pibase.janelia.org/pibase2010/files/pibase_installation_guide.pdf">pibase_installation_guide.pdf</a><p>
+
+Installing the compiled version is very simple and fast. Alternatively, you can build the database yourself locally. If you choose to do this, a cluster is necessary: it takes about 1 day to build the database on 100x 2.66GHz Intel X5550 nodes. The build process consists of editing a config file to specify your directory structure and mysql database specs and then basically running <tt>perl scripts/build_pibase.pl</tt>.<br>Essentially everything is automatic, you just need to have a local PDB (and PISA, if you wish) repository. The program automatically retrieves all other external data sources, processes them, performs all computations, and imports the results into the mysql database; using an SGE cluster if available.<p>
+</DIV>
+
+</td>
+</table>
+
+<br>
+<DIV class=bodytext><a href="http://research.janelia.org/davis">davisf</a> at <a href ="http://hhmi.org/janelia">janelia</a> dot hhmi dot org</strong></DIV>
+</body>
+</html>

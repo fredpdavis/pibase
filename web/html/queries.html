@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Simple Queries - PIBASE</title>
+<LINK title="marcius style" media=screen href="style/styles.css" type=text/css rel=StyleSheet>
+<LINK REL="SHORTCUT ICON" HREF="figs/pibase.ico">
+</head>
+<body>
+
+<DIV class=bodytext>
+<table width=65% align="center" border="0" width=100%>
+<tr>
+<td valign="top" align="right">
+<IMG height=50 width=50 SRC="figs/pibase_blue_web.png" BORDER=0>
+<DIV class=large><B>PIBASE v2010</B></DIV>
+</td>
+<td>
+<B>Queries</B> <a href="queries_detailed.html">(detailed)</a> |
+<a href="introduction.html">Introduction</a> |
+<a href="statistics.html">Statistics</a> |
+<a href="download.html">Download</a> |
+<a href="http://research.janelia.org/davis/projects.html">related work</a>
+</td>
+</tr>
+</table>
+</DIV>
+
+<table width=85% align="center">
+<td>
+<p>
+<DIV class=large>
+<b>PIBASE: a database of structurally defined protein interfaces.</B></DIV>
+<br>
+<hr>
+
+<form action="/pibase-cgi/pibase2010/find.pl" method="get" name="find_object">
+<DIV class=bodytext><input type="radio" name="object_type" value="complexes" CHECKED>Find complex by PDB code: <input type="text" value="" name="complex_pdb_id" align="top" maxlength="4" size="4"> (<i>eg</i> 1ivo) <p></DIV>
+<DIV class=bodytext><input type="radio" name="object_type" value="interfaces">Find interface by domain class 1: <input type="text" value="" name="interface_class_1" align="top" maxlength="11" size="11"> class 2: <input type="text" value="" name="interface_class_2" align="top" maxlength="11" size="11"> (<i>eg</i> g.3.11.1 c.10.2.5</i>)<br>
+<input type="submit" value="Search" align="middle"><input type="reset"><br>
+</DIV>
+</form>
+
+<DIV class=bodytext>The <a href="queries_detailed.html">detailed query form</a> offers more query options for domains, interfaces, and complexes.</DIV>
+
+<hr>
+
+</td>
+</table>
+
+
+<br>
+<DIV class=bodytext><a href="http://research.janelia.org/davis">davisf</a> at <a href ="http://hhmi.org/janelia">janelia</a> dot hhmi dot org</strong></DIV>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write("\<script src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'>\<\/script>" );
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-3242035-1");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+
+</body>
+</html>

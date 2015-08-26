@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}
+\usepackage[nohead,margin=2cm,includefoot]{geometry}
+\geometry{verbose,letterpaper,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\title{PIBASE installation guide. ver 2010\\
+\includegraphics[scale=0.5]{pibase_blue_web.pdf}}
+\author{Fred P. Davis, HHMI-JFRC\\{\tt davisf@janelia.hhmi.org}\\\url{http://pibase.janelia.org}}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document describes how to set up a local PIBASE installation.
+\end{abstract}
+
+PIBASE can be installed locally by (1) downloading a compiled version of the database from \url{http://pibase.janelia.org/pibase2010/download.html}, or (2) downloading the PIBASE software package and compiling your own version of the database. Both routes lead to a complete installation that can be accessed through the mysql, perl, or web interfaces.
+
+\part{Installing the precompiled PIBASE v2010}
+
+\section{Downloading data}
+
+All PIBASE files are available for download at \url{http://pibase.janelia.org/pibase2010/download.html} under the GPL license.
+
+\subsection{PIBASE software}
+
+Download the PIBASE software package ( pibase\_src\_v2010.tar.gz ) and uncompress it in the directory where you want to install the software:
+\begin{verbatim}
+cd yourinstalldirectory
+tar xvfz pibase_src.20100906.tar.gz
+\end{verbatim}
+
+
+\subsection{MySQL data dump}
+
+Create an empty MySQL database to hold the PIBASE contents, for example:
+\begin{verbatim}
+mysql -u root -p
+mysql> CREATE DATABASE pibase ;
+mysql> GRANT ALL ON pibase.* TO pibaseuser@hostname IDENTIFIED BY pibasepassword;
+mysql> FLUSH PRIVILEGES;
+\end{verbatim}
+
+Download the PIBASE mysql dump ( pibase2010\_dump.20100918.out.gz) and load it into the database you just created:
+
+\begin{verbatim}
+zcat pibase2010_dump.20100918.out.gz | mysql -u YOURUSERNAME -p YOURDATABASENAME
+\end{verbatim}
+
+
+\subsection{Data files}
+
+Besides the data in the MySQL tables, there are several kinds of compressed text files that are space-prohibitive as MySQL tables. For example the actual stucture files for individual domains, or the list of pairwise contacts at interfaces. The files you need to download depend on what type of queries or data you are intersted in accessing. For example, for a webserver installation, only the bdp\_topology\_graphs and subset\_files are required. If you are only interested in querying properties that are present in the MySQL tables, you don't need any of these at all.
+
+\begin{itemize}
+   \item bdp\_topology\_graphs (583 MB) - png and eps pictures of complex topology graphs.
+   \item subset\_files (23.3 GB) - PDB files of individual domains.
+   \item metatod - meta tables on disk; the *\_file MySQL tables point to these files.
+   \begin{itemize}
+      \item bdp\_residues (592 MB)- residue listing for each BDP file.
+      \item bdp\_sec\_strx (483 MB)- secondary structure assignment for each BDP file.
+      \item bindingsite\_contacts (2.99 GB) - contacts between residues in each binding site
+      \item bindingsite\_secstrx\_basic\_contacts (530 GB) - contacts between secondary structure elements in each binding site
+      \item interface\_contacts (952 MB)- pairwise contacts across each interface
+      \item interface\_contacts\_special (161 MB) - ``special'' contacts (H-bond, salt bridge, disulfide bridges) across each interface
+      \item interface\_secstrx (1.8GB) - secondary structure content at each interface
+      \item interface\_secstrx\_basic\_contacts (246 MB) - contacts between basic secondary structure elements at each interface
+      \item interface\_secstrx\_contacts (252 MB) - contacts between detailed secondary structure elements at each interface
+      \item patch\_residues (318 MB) - residues in each patch (contiguous region of residues in each binding site)
+      \item subsets\_residues (775 MB) - residues in each domain
+   \end{itemize}
+\end{itemize}
+
+
+\section{Web interface}
+
+Setting up your own web interface to PIBASE requires you to (1) download the software, (2) create a MySQL database, and (3) download and uncompress the data files for bdp\_topology\_graphs and subsets\_files. Next, there are a few lines to edit in pibase.pm to reflect your database specifications and local directory structure. Then, just copy over the html, cgi-bin, and perl library to your webserver, and it should be ready to query.
+
+In detail:
+
+\begin{enumerate}
+\item Edit pibase.pm to reflect your MySQL database speccs. ($~$ src/perl\_api/pibase.pm lines 57-60).
+
+\begin{verbatim}
+   db => 'pibasemysqldatabasename',
+   host => 'mysqlserverhostname',
+   user => 'pibaseusername' ,
+   pass => 'pibasepassword',
+\end{verbatim}
+
+\item Edit pibase.pm to reflect the html and cgi-bin directories of your web server. ($~$ src/perl\_api/pibase.pm lines 220, 221).
+\begin{verbatim}
+   $pibase_specs->{web}->{html_dir} = "/var/www/websites/pibase/html/" ;
+   $pibase_specs->{web}->{cgi_dir} = "/var/www/websites/pibase/cgi-bin/" ;
+\end{verbatim}
+
+\item Edit pibase.pm to reflect the correct URLS for the html and cgi-bin directories of your web server. ($~$ src/perl\_api/pibase.pm lines 223, 224).
+\begin{verbatim}
+   $pibase_specs->{web}->{base_url} = "http://localhost/pibase";
+   $pibase_specs->{web}->{basecgi_url} = "http://localhost/pibase-cgi";
+\end{verbatim}
+
+\item Edit pibase.pm to reflect the directories where you uncompressed the bdp\_topology\_graphs and subsets\_files tar files. ($~$ src/perl\_api/pibase.pm lines 226, 227, 230, 231).
+\begin{verbatim}
+   $pibase_specs->{web}->{bdp_topology_graphs_baseurl} =
+      $pibase_specs->{web}->{base_url}.'/data_files/bdp_topology_graphs' 
+
+   $pibase_specs->{web}->{subsets_files_basedir} =
+      $pibase_specs->{web}->{html_dir}.'/data_files/subsets_files' ;
+\end{verbatim}
+
+\item The static html pages (web/html/*.html) assume that the CGI directory sits ../cgi-bin relative to the html directory; if this isn't true for your webserver, edit the form submit lines in the html pages to reflect the path to your CGI directory
+
+\item Lastly, copy the contents of the html, cgi, and perl\_api directories to your webserver
+\begin{verbatim}
+   cp -r web/html/* yourwebserver/html
+   cp -r web/cgi-bin/* yourwebserver/cgi-bin
+   cp -r src/perl_api yourwebserver/cgi-bin/perl_lib
+\end{verbatim}
+\end{enumerate}
+
+That should be it, the webserver should be functional now.
+
+
+\part{Building your own PIBASE}
+
+First, edit pibase.pm to specify the PDB (and optionally, PIBASE) file paths for your local directory structure. Then, {\tt perl src/scripts/build\_pibase.pl} should run through the build process.
+
+\end{document}

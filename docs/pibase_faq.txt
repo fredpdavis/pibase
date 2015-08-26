@@ -1,0 +1,58 @@
+
+Q1. How do i get a list of interface residues for a particular interface?
+
+You will need to install the mysql database - as described on the web page,
+Then download the set of files that have the interface contacts:
+ http://pibase.janelia.org/download/interface_contacts.pibase_20080825.tar
+
+After you install the mysql database, this is how you would get the
+interface residues, for example between the two domains:
+BDP21691-0_SCOP.d1ivoa3 and BDP21691-0_SCOP.d1ivob3
+
+1. Get the bdp_id (the internal pibase identifier for each individual
+protein structure)
+
+mysql> SELECT bdp_id from intersubset_contacts WHERE subset_id_1 =
+'BDP21691-0_SCOP.d1ivoa3' and subset_id_2 = 'BDP21691-0_SCOP.d1ivob3';
+
+This would tell you that this interface is from bdp_id = 21691
+
+2. Get the name of the interface_contacts file for this bdp_id
+
+mysql> SELECT source_file FROM interface_contacts_tables WHERE bdp_id =
+21691;
+
+This will tell you that the name of the file is:
+/groups/karpova/......../metatod/interface_contacts/21/interface_contacts_21
+691.uRXkhY.pibase.gz
+
+You should replace the first part of this file path with the local directory
+where you uncompressed the itnerface_contacts.tar file:
+/YOURDIRECTORY/interface_contacts/21/interface_contacts_21691.uRXkhY.pibase.
+gz
+
+Finally, you would look inside this file, either by hand, OR using the perl
+library that comes with the download (pibase::rawselect_metatod() routine is
+documented, should be straightforward to figure out - I can send you an
+example script if you're having trouble with it)
+
+By hand you could do this:
+zcat interface_contacts_21691.uRXkhY.pibase.gz | grep
+BDP21691-0_SCOP.d1ivoa3 | grep BDP21691-0_SCOP.d1ivob3 | less
+
+This lists the pairs of residues, their distance, and the number of contacts
+at different cutoffs; the format of this file is described in the schema
+(blue table called interface_contacts_prototype), available here:
+http://pibase.janelia.org/files/PIBASE_schema.pdf
+
+
+Q2. How to get CA coordinates only
+
+I would just use awk to get the ^ATOM lines with CA atoms in it, like so:
+(all on one line)
+
+$cat pdbfile |  sed '/^ENDMDL/q' | awk '{if (($0 ~ /^ATOM/ &&
+(substr($0,13,4) == " CA ") ) || $0 !~ /^ATOM/) print}' > pdbfile.ca
+
+The sed command cuts the file after the first ENDMDL record, so that if it
+is an NMR ensemble, it only returns the first model.

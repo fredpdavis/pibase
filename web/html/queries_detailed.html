@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>Detailed Queries - PIBASE</title>
+<LINK title="marcius style" media=screen href="style/styles.css" type=text/css rel=StyleSheet>
+<LINK REL="SHORTCUT ICON" HREF="figs/pibase.ico">
+</head>
+
+<DIV class=bodytext>
+<table width=65% align="center" border="0" width=100%>
+<tr>
+<td valign="top" align="right">
+<IMG height=50 width=50 SRC="figs/pibase_blue_web.png" BORDER=0>
+<DIV class=large><B>PIBASE v2010</B></DIV>
+</td>
+<td>
+<a href="queries.html">Queries</a> <B>(detailed)</B> |
+<a href="introduction.html">Introduction</a> |
+<a href="statistics.html">Statistics</a> |
+<a href="download.html">Download</a> |
+<a href="http://research.janelia.org/davis/projects.html">related work</a>
+</td>
+</tr>
+</table>
+</DIV>
+
+<table width=75% align="center">
+<td>
+<p>
+<DIV class=large>
+<b>PIBASE: a database of structurally defined protein interfaces.</B></DIV>
+<br>
+<hr>
+
+
+<form action="/pibase-cgi/pibase2010/find.pl" method="get" name="find_object">
+<DIV class=bodytext>
+<B>Search for</B> <input type="radio" name="object_type" value="complexes">complexes<input type="radio" name="object_type" value="interfaces" checked>interfaces<input type="radio" name="object_type" value="domains">domains <input type="submit" value="Search" align="middle"><input type="reset"><br>
+<input type="checkbox" name="view_query_only" value="yes">view SQL query only (doesn't run the query)<br>
+</DIV>
+<p>
+
+<DIV class=bodytext><B>That meet the following criteria:</B> specify as much as you'd like.</DIV>
+<DIV class=bodytext><B>* Complex properties</B></DIV>
+<DIV class=bodytext>
+bdp_id: <input type="text" value="" name="complex_bdp_id" align="top" maxlength="6" size="6"> PDB code: <input type="text" value="" name="complex_pdb_id" align="top" maxlength="5" size="5"> Resolution: &le; <input type="text" value="" name="complex_resolution" align="top" maxlength="4" size="4"> &#8491;<p>
+PDB keyword: <input type="text" value="" name="complex_pdb_keyword" align="top" maxlength="30" size="30"><p>
+Topology fingerprint: <input type="text" value="" name="complex_topology" align="top" maxlength="50" size="20"> <input type="checkbox" name="complex_domain_type" value="1">SCOP<input type="checkbox" name="complex_domain_type" value="2">CATH<input type="checkbox" name="complex_domain_type" value="3">chain (select one)
+<p>
+
+Number of domains: <select name="complex_num_domains_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="complex_num_domains" align="top" maxlength="3" size="3">
+
+Number of interfaces: <select name="complex_num_interfaces_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="complex_num_interfaces" align="top" maxlength="3" size="3">
+
+<p>
+<DIV class=bodytext><B>* Interface properties</B></DIV>
+
+<DIV class=bodytext>
+Domain subset_id 1: <input type="text" value="" name="interface_subset_id_1" align="top" maxlength="30" size="15"> subset_id 2: <input type="text" value="" name="interface_subset_id_2" align="top" maxlength="30" size="15"> <br>
+Domain type: <input type="checkbox" name="interface_domain_type" value="1">SCOP<input type="checkbox" name="interface_domain_type" value="2">CATH<input type="checkbox" name="interface_domain_type" value="3">chain (select one)<br>
+Domain class 1: <input type="text" value="" name="interface_class_1" align="top" maxlength="11" size="11"> class 2: <input type="text" value="" name="interface_class_2" align="top" maxlength="11" size="11"><br>
+The two components should be on the <input type="checkbox" name="interface_chains" value="same">same, <input type="checkbox" name="interface_chains" value="diff">different chains (select one)<br>
+
+<p>
+<DIV class=bodytext>
+Number of inter-domain contacts (at 6.05 &#8491;): <select name="interface_num_contacts_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_num_contacts" align="top" maxlength="7" size="7"><br>
+
+Number of residues: <select name="interface_numres_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_numres" align="top" maxlength="7" size="7"><br>
+
+Buried solvent accessible surface area (SASA): <select name="interface_dsasa_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_dsasa" align="top" maxlength="7" size="7"> &#8491;&sup2;<br>
+
+Percent of buried SASA that is polar: <select name="interface_perc_dsasa_polar_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_perc_dsasa_polar" align="top" maxlength="7" size="7">%<br>
+<p>
+
+Percent of interface that is unstructured: <select name="interface_perc_loop_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_perc_loop" align="top" maxlength="7" size="7"> %<br>
+
+Percent of interface that is alpha helical: <select name="interface_perc_helix_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_helix_loop" align="top" maxlength="7" size="7"> %<br>
+
+Percent of interface that is beta stranded: <select name="interface_perc_strand_operator">
+<option value=">=" selected>&ge;</option>
+<option value="=">=</option>
+<option value="<=">&le;</option>
+</select>
+<input type="text" value="" name="interface_strand_loop" align="top" maxlength="7" size="7"> %<br>
+</DIV>
+
+<p>
+<DIV class=bodytext><B>* Domain properties</B></DIV>
+<DIV class=bodytext> <p>
+subset_id: <input type="text" value="" name="domain_subset_id" align="top" maxlength="30" size="20"><br>
+type: <input type="checkbox" name="domain_type" value="1">SCOP<input type="checkbox" name="domain_type" value="2">CATH<input type="checkbox" name="domain_type" value="3">chain (select one)<br>
+class: <input type="text" value="" name="domain_class" align="top" maxlength="11" size="11">
+</DIV>
+</form>
+
+<hr>
+
+</td>
+</table>
+
+<br>
+<DIV class=bodytext><a href="http://research.janelia.org/davis">davisf</a> at <a href ="http://hhmi.org/janelia">janelia</a> dot hhmi dot org</strong></DIV>
+</body>
+</html>

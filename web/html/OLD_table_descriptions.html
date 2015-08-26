@@ -1,0 +1,1391 @@
+<html>
+<head>
+<title>Database Structure - PIBASE</title>
+<link rel="stylesheet" type="text/css" href="style/styles.css" />
+<LINK REL="SHORTCUT ICON" HREF="figs/pibase.ico">
+</head>
+
+<DIV class=bodytext>
+<table border="0" width=100%>
+<tr>
+<td bgcolor=#c5cfe9>
+<a href="queries.html">Queries</a> |
+<a href="introduction.html">Introduction</a> |
+<a href="statistics.html">Statistics</a> |
+<a href="download.html">Download</a> |
+<a href="http://salilab.org">Sali Lab</a>
+</td>
+<td valign="center" align="right" bgcolor=#000000><DIV class=large><B><font color=#c5cfe9>PIBASE</font></B></DIV></td>
+</tr>
+</table>
+</DIV>
+
+<p><DIV class=large><B>Overview</B></DIV>
+
+<DIV class=bodytext>
+The individual tables are described below. This <a href="files/PIBASE_web.ddl.sql">file</a> contains this information in the form of MySQL commands to build the tables. This can be used in combination with the released table dumps to build a local copy of the tables.
+
+The schema (<a href ="http://salilab.org/pibase/files/PIBASE_web.strx.eps.gz">eps</a>, <a href ="http://salilab.org/pibase/files/PIBASE_web.strx.png">png</a>)  provides a visual description of the tables and their logical relations.
+</DIV>
+
+<p><center><DIV class=large><B>Table Descriptions</B></DIV></center>
+
+<table>
+<caption><div class=red><B>bdp_files</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned auto_increment,</DIV></td>
+<td><DIV class=trodd>unique identifier for each pdb file</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>file_path</DIV></td>
+<td><DIV class=treven>char(80) not null,</DIV></td>
+<td><DIV class=treven>path to coordinates file</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>file_base</DIV></td>
+<td><DIV class=trodd>char(30) not null,</DIV></td>
+<td><DIV class=trodd>basename of the coordinates file</DIV></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>pdb_id</DIV></td>
+<td><DIV class=treven>char(4) not null,</DIV></td>
+<td><DIV class=treven>PDB identifier associated with this entry</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>raw_pdb</DIV></td>
+<td><DIV class=trodd>bool</DIV></td>
+<td><DIV class=trodd>1 if official PDB entry, 0 if a derivative (eg PQS entry)</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>bdp_xpack</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>xpack</DIV></td>
+<td><DIV class=treven>tinyint(1) not null</DIV></td>
+<td><DIV class=treven>1 if PQS determined the quaternary state in this entry to be an artifact of crystallographic packing (0 if assessed to be a biological quaternary state)</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>bdp_chains</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>real_chain_no</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>a unique number assigned to each chain in the structure file</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>real_chain_id</DIV></td>
+<td><DIV class=trodd>char(1) not null,</DIV></td>
+<td><DIV class=trodd>the chain id from the coordinates file</DIV></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>chain_type</DIV></td>
+<td><DIV class=treven>enum('p', 'n') not null,</DIV></td>
+<td><DIV class=treven>protein or nucleotide chain</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>pdb_chain_no</DIV></td>
+<td><DIV class=trodd>integer unsigned,</DIV></td>
+<td><DIV class=trodd>the chain number in the parent PDB entry to which this chain corresponds (ie has identical amino acid sequence)</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>pdb_chain_id</DIV></td>
+<td><DIV class=treven>char(1),</DIV></td>
+<td><DIV class=treven>chain id of the parent PDB entry which corresponds to this chain (ie has identical amino acid sequence)</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>start_resno</DIV></td>
+<td><DIV class=trodd>char(10) not null,</DIV></td>
+<td><DIV class=trodd>residue number (including insertion code) of the first residue on the chain</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>start_resno_int</DIV></td>
+<td><DIV class=treven>integer not null,</DIV></td>
+<td><DIV class=treven>residue number (excluding insertion code) of the first residue on the chain</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>end_resno</DIV></td>
+<td><DIV class=trodd>char(10) not null,</DIV></td>
+<td><DIV class=trodd>residue number (including insertion code) of the last residue on the chain</DIV></td>
+<tr valign=top><td><DIV class=treven>10</DIV></td>
+<td></td>
+<td><DIV class=treven>end_resno_int</DIV></td>
+<td><DIV class=treven>integer not null,</DIV></td>
+<td><DIV class=treven>residue number (excluding insertion code) of the last residue on the chain</DIV></td>
+<tr valign=top><td><DIV class=trodd>11</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_res</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of residues on this chain</DIV></td>
+<tr valign=top><td><DIV class=treven>12</DIV></td>
+<td></td>
+<td><DIV class=treven>num_atoms</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of ATOM records for this chain</DIV></td>
+<tr valign=top><td><DIV class=trodd>13</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_hetatm</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of HETATM records on this chain</DIV></td>
+<tr valign=top><td><DIV class=treven>14</DIV></td>
+<td></td>
+<td><DIV class=treven>sequence</DIV></td>
+<td><DIV class=treven>text not null</DIV></td>
+<td><DIV class=treven>amino acid sequence of this chain</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>bdp_topo</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>num_domains</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of domains (SCOP)</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_edges</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of interfaces between SCOP defined domains</DIV></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>num_domain_classes</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of unique domain classes (SCOP family level)</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>nodestring</DIV></td>
+<td><DIV class=trodd>text not null,</DIV></td>
+<td><DIV class=trodd>period delimited list of domains labelled by the number of interfaces they participate in</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>edgestring</DIV></td>
+<td><DIV class=treven>text not null</DIV></td>
+<td><DIV class=treven>period delimited list of interfaces between domains labelled by the number of interfaces they participate in</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>subsets</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_id</DIV></td>
+<td><DIV class=trodd>char(50) not null,</DIV></td>
+<td><DIV class=trodd>unique identifier assigned to each domain</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>bdp_id</DIV></td>
+<td><DIV class=treven>integer,</DIV></td>
+<td><DIV class=treven>bdp_id where this domain exists (may be null if it is a record imported from source database - in which case pdb_id is defined)</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>pdb_id</DIV></td>
+<td><DIV class=trodd>char(4),</DIV></td>
+<td><DIV class=trodd>PDB identifier where this domain exists (may be null if it is a record generated internally - transferred from the raw source entries)</DIV></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>description</DIV></td>
+<td><DIV class=treven>char(250)</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>subset_source_id</DIV></td>
+<td><DIV class=trodd>integer not null,</DIV></td>
+<td><DIV class=trodd>identifies database from which this definition was obtained (as defined in table subsets_source)</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>class</DIV></td>
+<td><DIV class=treven>char(70) not null</DIV></td>
+<td><DIV class=treven>classification assigned by the source domain database (eg a.1.1.1)</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>subsets_details</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_id</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>segment_id</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>chain_no</DIV></td>
+<td><DIV class=trodd>integer unsigned</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>chain_id</DIV></td>
+<td><DIV class=treven>char(1) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>start_resno</DIV></td>
+<td><DIV class=trodd>char(10) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>start_resno_int</DIV></td>
+<td><DIV class=treven>integer</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>end_resno</DIV></td>
+<td><DIV class=trodd>char(10) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>end_resno_int</DIV></td>
+<td><DIV class=treven>integer</DIV></td>
+<td></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>subsets_class</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_source_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>identifies database from which this definition was obtained (as defined in table subsets_source)</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>class</DIV></td>
+<td><DIV class=treven>char(70) not null,</DIV></td>
+<td><DIV class=treven>classification assigned by the source domain database (eg a.1.1.1)</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>description</DIV></td>
+<td><DIV class=trodd>char(250)</DIV></td>
+<td></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>subsets_source</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_source_id</DIV></td>
+<td><DIV class=trodd>integer unsigned auto_increment not null,</DIV></td>
+<td><DIV class=trodd>identifier assigned to each database/version combination</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_source</DIV></td>
+<td><DIV class=treven>char(50) not null,</DIV></td>
+<td><DIV class=treven>name of the domain database</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>version</DIV></td>
+<td><DIV class=trodd>char(20) not null</DIV></td>
+<td><DIV class=trodd>version of the database</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>subsets_sasa</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_id</DIV></td>
+<td><DIV class=trodd>char(50) not null,</DIV></td>
+<td><DIV class=trodd>unique identifier assigned to each domain</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>sasa</DIV></td>
+<td><DIV class=treven>float not null,</DIV></td>
+<td><DIV class=treven>surface area (square angstroms)</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>sasa_polar</DIV></td>
+<td><DIV class=trodd>float not null,</DIV></td>
+<td><DIV class=trodd>polar surface area contributed by side chains</DIV></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>sasa_nonpolar</DIV></td>
+<td><DIV class=treven>float not null</DIV></td>
+<td><DIV class=treven>non-polar surface area contributed by side chains</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>intersubset_contacts</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td></td>
+<td><DIV class=trodd>class_1</DIV></td>
+<td><DIV class=trodd>char(70) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_id_2</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>class_2</DIV></td>
+<td><DIV class=trodd>char(70) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>num_contacts</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of interatomic contacts at the specified cutoff</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>cutoff</DIV></td>
+<td><DIV class=trodd>float not null,</DIV></td>
+<td><DIV class=trodd>cutoff (Angstroms) at which a contact is defined</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>num_contacts_4</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of interatomic contacts at 4 Ang</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_contacts_4p5</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of interatomic contacts at 4.5 Ang</DIV></td>
+<tr valign=top><td><DIV class=treven>10</DIV></td>
+<td></td>
+<td><DIV class=treven>num_contacts_5</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of interatomic contacts at 5 Ang</DIV></td>
+<tr valign=top><td><DIV class=trodd>11</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_contacts_5p5</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of interatomic contacts at 5.5 Ang</DIV></td>
+<tr valign=top><td><DIV class=treven>12</DIV></td>
+<td></td>
+<td><DIV class=treven>hbond</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of H-bonds</DIV></td>
+<tr valign=top><td><DIV class=trodd>13</DIV></td>
+<td></td>
+<td><DIV class=trodd>salt</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of salt bridges</DIV></td>
+<tr valign=top><td><DIV class=treven>14</DIV></td>
+<td></td>
+<td><DIV class=treven>ssbond</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of disulfide bridges</DIV></td>
+<tr valign=top><td><DIV class=trodd>15</DIV></td>
+<td></td>
+<td><DIV class=trodd>chains</DIV></td>
+<td><DIV class=trodd>enum('same', 'diff', 'both') not null</DIV></td>
+<td><DIV class=trodd>same if the domains are on the same chain; diff is the domains are on different chains; both is the domanis have segments on the same chain as well as segments on different chains</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>bindingsite_topo</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td><DIV class=treven>4</DIV></td>
+<td><DIV class=treven>subset_id</DIV></td>
+<td><DIV class=treven>char(50) not null,</DIV></td>
+<td><DIV class=treven>subset_id of the binding site described</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_nodes</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of secondary structure elements in the binding site of subset_id</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>num_edges</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of contacts between secondary structure elements in the binding site</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>nodelist</DIV></td>
+<td><DIV class=trodd>text not null,</DIV></td>
+<td><DIV class=trodd>period delimited list of degree-labelled nodes in descending ordered</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>nodelist_sse</DIV></td>
+<td><DIV class=treven>text not null,</DIV></td>
+<td><DIV class=treven>period delimited list of nodes labelled by degree and secondary structure type</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>edgelist</DIV></td>
+<td><DIV class=trodd>text not null,</DIV></td>
+<td><DIV class=trodd>period delimited list of contacts between degree-labelled nodes in descending ordered</DIV></td>
+<tr valign=top><td><DIV class=treven>10</DIV></td>
+<td></td>
+<td><DIV class=treven>edgelist_sse</DIV></td>
+<td><DIV class=treven>text not null</DIV></td>
+<td><DIV class=treven>period delimited list of contacts between nodes labelled by degree and secondary structure type</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_secstrx_profile</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_1</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of secondary structure elements presented to the interface by domain 1</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_2</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of secondary structure elements presented to the interface by domain 2</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of contacts between secondary structure elements at the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>sse_contact_vector</DIV></td>
+<td><DIV class=trodd>char(36) not null,</DIV></td>
+<td><DIV class=trodd>bit vector that describes the secondary structure type contacts observed at the interface (concatenated upper left triangle of 8x8 between 7 DSSP secondary structure tyes and unassigned)</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>sse_vector_1</DIV></td>
+<td><DIV class=treven>char(8) not null,</DIV></td>
+<td><DIV class=treven>secondary structure types presented by domain 1 (alphabetical order of DSSP 7-letter types and unassigned)</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>sse_vector_2</DIV></td>
+<td><DIV class=trodd>char(8) not null,</DIV></td>
+<td><DIV class=trodd>secondary structure types presented by domain 1 (alphabetical order of DSSP 7-letter types and unassigned)</DIV></td>
+<tr valign=top><td><DIV class=treven>10</DIV></td>
+<td></td>
+<td><DIV class=treven>sse_contact_vector_norm</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of secondary structure type contacts made at the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>11</DIV></td>
+<td></td>
+<td><DIV class=trodd>sse_vector_1_norm</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of secondary structure types presented to the interface by domain 1</DIV></td>
+<tr valign=top><td><DIV class=treven>12</DIV></td>
+<td></td>
+<td><DIV class=treven>sse_vector_2_norm</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of secondary structure types presented to the interface by domain 2</DIV></td>
+<tr valign=top><td><DIV class=trodd>13</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_1_H</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of secondary structure elements presented by domain 1 which are Helices (DSSP code H)</DIV></td>
+<tr valign=top><td><DIV class=treven>14</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_1_B</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>15</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_1_E</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>16</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_1_G</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>17</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_1_I</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>18</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_1_T</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>19</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_1_S</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>20</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_1_u</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>21</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_2_H</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>22</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_2_B</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>23</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_2_E</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>24</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_2_G</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>25</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_2_I</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>26</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_2_T</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>27</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_2_S</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>28</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_2_u</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>29</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_HH</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of secondary structure element contacts made between a helix from domain 1 and a helix from domain 2 (H and H)</DIV></td>
+<tr valign=top><td><DIV class=treven>30</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_HB</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>31</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_HE</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>32</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_HG</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>33</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_HI</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>34</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_HT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>35</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_HS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>36</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_Hu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>37</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_BB</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>38</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_BE</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>39</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_BG</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>40</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_BI</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>41</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_BT</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>42</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_BS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>43</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_Bu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>44</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_EE</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>45</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_EG</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>46</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_EI</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>47</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_ET</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>48</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_ES</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>49</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_Eu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>50</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_GG</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>51</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_GI</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>52</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_GT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>53</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_GS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>54</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_Gu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>55</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_II</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>56</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_IT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>57</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_IS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>58</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_Iu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>59</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_TT</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>60</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_TS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>61</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_Tu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>62</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_SS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>63</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_sse_12_Su</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>64</DIV></td>
+<td></td>
+<td><DIV class=treven>num_sse_12_uu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>65</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_1_H</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of HELIX residues presented by domain 1 to the interface</DIV></td>
+<tr valign=top><td><DIV class=treven>66</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_1_B</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>67</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_1_E</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>68</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_1_G</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>69</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_1_I</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>70</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_1_T</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>71</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_1_S</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>72</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_1_u</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>73</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_2_H</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>74</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_2_B</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>75</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_2_E</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>76</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_2_G</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>77</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_2_I</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>78</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_2_T</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>79</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_2_S</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>80</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_2_u</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>81</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_HH</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of residue-residue contacts across the interface between two residues on helices</DIV></td>
+<tr valign=top><td><DIV class=treven>82</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_HB</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>83</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_HE</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>84</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_HG</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>85</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_HI</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>86</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_HT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>87</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_HS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>88</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_Hu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>89</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_BB</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>90</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_BE</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>91</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_BG</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>92</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_BI</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>93</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_BT</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>94</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_BS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>95</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_Bu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>96</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_EE</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>97</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_EG</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>98</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_EI</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>99</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_ET</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>100</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_ES</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>101</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_Eu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>102</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_GG</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>103</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_GI</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>104</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_GT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>105</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_GS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>106</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_Gu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>107</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_II</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>108</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_IT</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>109</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_IS</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>110</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_Iu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>111</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_TT</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>112</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_TS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>113</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_Tu</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>114</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_SS</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>115</DIV></td>
+<td></td>
+<td><DIV class=trodd>numres_sse_12_Su</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>116</DIV></td>
+<td></td>
+<td><DIV class=treven>numres_sse_12_uu</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_sasa</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>pdb file identifier</DIV></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null,</DIV></td>
+<td><DIV class=treven>unique identifier of the domain involved in an interaction with subset_id_2</DIV></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>sasa_12_all</DIV></td>
+<td><DIV class=treven>float not null,</DIV></td>
+<td><DIV class=treven>total surface area of the two domain complex</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>sasa_12_polar</DIV></td>
+<td><DIV class=trodd>float not null,</DIV></td>
+<td><DIV class=trodd>polar surface area of the two domain complex</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>sasa_12_nonpolar</DIV></td>
+<td><DIV class=treven>float not null,</DIV></td>
+<td><DIV class=treven>nonpolar surface area of the two domain complex</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>dsasa_all</DIV></td>
+<td><DIV class=trodd>float not null,</DIV></td>
+<td><DIV class=trodd>total surface area of the interface</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>dsasa_polar</DIV></td>
+<td><DIV class=treven>float not null,</DIV></td>
+<td><DIV class=treven>polar surface area of the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>dsasa_nonpolar</DIV></td>
+<td><DIV class=trodd>float not null</DIV></td>
+<td><DIV class=trodd>non-polar surface area of the interface</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_composition</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>contact_vector</DIV></td>
+<td><DIV class=treven>char(210) not null,</DIV></td>
+<td><DIV class=treven>210 bit vector which captures residue type contacts (upper left triangle of 20x20 matrix - columns and rows in alphabetical order of single letter amino acid abbreviatin -eg first bit is Ala-Ala contact)</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>res_vector_1</DIV></td>
+<td><DIV class=trodd>char(20) not null,</DIV></td>
+<td><DIV class=trodd>bit vector which captures residue types presented by domain 1 (in alphabetical order of single letter abbreviation - eg first bit is Alanine)</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>res_vector_2</DIV></td>
+<td><DIV class=treven>char(20) not null,</DIV></td>
+<td><DIV class=treven>bit vector which captures residue types presented by domain 2 (in alphabetical order of single letter abbreviation - eg first bit is Alanine)</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>contact_vector_norm</DIV></td>
+<td><DIV class=trodd>integer not null,</DIV></td>
+<td><DIV class=trodd>number of on bits in the contact_vector (ie number of distinct types of residue-residue contacts made)</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>res_vector_1_norm</DIV></td>
+<td><DIV class=treven>integer not null,</DIV></td>
+<td><DIV class=treven>number of on bits in the res_vector_1 (ie number of distinct types of residues presented by domain 1)</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>res_vector_2_norm</DIV></td>
+<td><DIV class=trodd>integer not null</DIV></td>
+<td><DIV class=trodd>number of on bits in the res_vector_2 (ie number of distinct types of residues presented by domain 2)</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_size</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>num_res_1</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of residues presented to the interface by domain 1</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_res_2</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of residues presented to the interface by domain 1</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>subset_size_1</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>total number of residues in domain 1</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>subset_size_2</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td><DIV class=trodd>total number of residues in domain 2</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_continuity</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>seq_segments_1</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of continuous sequence segments on domain 1 presented to the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>strx_patches_1</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of spatially contiguous structural patches on domain 1 presented to the interface</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>seq_segments_2</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of continuous sequence segments on domain 2 presented to the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>strx_patches_2</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of spatially contiguous structural patches on domain 1 presented to the interface</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>cutoff</DIV></td>
+<td><DIV class=treven>float not null</DIV></td>
+<td><DIV class=treven>maximum distance at which an interface residue becomes a part of a structural patch</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_topo</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>num_nodes</DIV></td>
+<td><DIV class=treven>integer unsigned not null,</DIV></td>
+<td><DIV class=treven>number of secondary structure elements at the interface</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>num_edges</DIV></td>
+<td><DIV class=trodd>integer unsigned not null,</DIV></td>
+<td><DIV class=trodd>number of contacts between secondary structure elements across the interface</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>nodelist</DIV></td>
+<td><DIV class=treven>text not null,</DIV></td>
+<td><DIV class=treven>period delimited list of degree-labelled nodes in descending ordered</DIV></td>
+<tr valign=top><td><DIV class=trodd>7</DIV></td>
+<td></td>
+<td><DIV class=trodd>nodelist_sse</DIV></td>
+<td><DIV class=trodd>text not null,</DIV></td>
+<td><DIV class=trodd>period delimited list of nodes labelled by degree and secondary structure type</DIV></td>
+<tr valign=top><td><DIV class=treven>8</DIV></td>
+<td></td>
+<td><DIV class=treven>edgelist</DIV></td>
+<td><DIV class=treven>text not null,</DIV></td>
+<td><DIV class=treven>period delimited list of contacts between degree-labelled nodes in descending ordered</DIV></td>
+<tr valign=top><td><DIV class=trodd>9</DIV></td>
+<td></td>
+<td><DIV class=trodd>edgelist_sse</DIV></td>
+<td><DIV class=trodd>text not null</DIV></td>
+<td><DIV class=trodd>period delimited list of contacts between nodes labelled by degree and secondary structure type</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_cluster_intrabdp</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>bdp_id</DIV></td>
+<td><DIV class=trodd>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>1</DIV></td>
+<td><DIV class=treven>subset_id_1</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>2</DIV></td>
+<td><DIV class=trodd>subset_id_2</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td></td>
+<td><DIV class=treven>cluster_no</DIV></td>
+<td><DIV class=treven>integer not null,</DIV></td>
+<td><DIV class=treven>identifier of the cluster to which this interface has been assigned</DIV></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>intracluster_no</DIV></td>
+<td><DIV class=trodd>integer not null</DIV></td>
+<td><DIV class=trodd>arbitrary integer assigned to this interface within its assigned cluster</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_cluster_intrapdb</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>pdb_id</DIV></td>
+<td><DIV class=trodd>char(4) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>bdp_id</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_id_1</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_id_2</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>cluster_no</DIV></td>
+<td><DIV class=trodd>integer not null,</DIV></td>
+<td><DIV class=trodd>the cluster to which this interface has been assigned (after clustering all the interfaces associated with this pdb_id)</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>intracluster_no</DIV></td>
+<td><DIV class=treven>integer not null</DIV></td>
+<td><DIV class=treven>arbitrary integer assigned to this interface within its assigned cluster</DIV></td>
+</table>
+<hr>
+<table>
+<caption><div class=red><B>interface_cluster_intrapdb_xpack</B></div></caption>
+<tr><th></th><th>key</th><th>name</th><th>type</th></tr>
+<tr valign=top><td><DIV class=trodd>1</DIV></td>
+<td></td>
+<td><DIV class=trodd>pdb_id</DIV></td>
+<td><DIV class=trodd>char(4) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>2</DIV></td>
+<td></td>
+<td><DIV class=treven>bdp_id</DIV></td>
+<td><DIV class=treven>integer unsigned not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>3</DIV></td>
+<td><DIV class=trodd>1</DIV></td>
+<td><DIV class=trodd>subset_id_1</DIV></td>
+<td><DIV class=trodd>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=treven>4</DIV></td>
+<td><DIV class=treven>2</DIV></td>
+<td><DIV class=treven>subset_id_2</DIV></td>
+<td><DIV class=treven>char(50) not null</DIV></td>
+<td></td>
+<tr valign=top><td><DIV class=trodd>5</DIV></td>
+<td></td>
+<td><DIV class=trodd>cluster_no</DIV></td>
+<td><DIV class=trodd>integer not null,</DIV></td>
+<td><DIV class=trodd>the cluster to which this interface has been assigned (after clustering all the interfaces associated with this pdb_id)</DIV></td>
+<tr valign=top><td><DIV class=treven>6</DIV></td>
+<td></td>
+<td><DIV class=treven>intracluster_no</DIV></td>
+<td><DIV class=treven>integer not null</DIV></td>
+<td><DIV class=treven>arbitrary integer assigned to this interface within its assigned cluster</DIV></td>
+</table>
+<hr>
+
+<DIV class=bodytext><a href="http://research.janelia.org/davis">davisf</a> at <a href ="http://hhmi.org/janelia">janelia</a> dot hhmi dot org</strong></DIV>
+</body>
+</html>

@@ -1,0 +1,69 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{graphicx}
+\renewcommand{\familydefault}{\sfdefault}
+%\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{makeidx}
+\title{PIBASE code guide. ver 2010\\
+\includegraphics[scale=0.5]{pibase_blue_web.pdf}}
+\author{Fred P. Davis, HHMI-JFRC\\{\tt davisf@janelia.hhmi.org}}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document describes the layout of the PIBASE software package. The documentation for all routines is collected here.
+\end{abstract}
+
+\section{Overview}
+
+The code used to build and access the database is packaged in (1) a perl library, pibase.pm, (2) a caller script build\_pibase.pl that calls the perl routines in the order necessary to build the database, and (3) a set of auxiliary programs, written in C and perl, that mainly perform PDB file operations.
+
+The goal of this manual is to describe the code in sufficient detail to allow you to design custom queries through the perl interface. Here, I first describe the (1) code layout in pibase.pm, (2) document some of the routines. The routines themselves have inline pod documentation. For now, this document just collects all the inline documentation into a single file.
+
+
+\begin{verbatim}
+
+
+perl_api/
+|-- LGL.pm
+|-- pibase
+|   |-- ASTRAL.pm
+|   |-- CATH.pm
+|   |-- PDB
+|   |   |-- chains.pm
+|   |   |-- residues.pm
+|   |   |-- sec_strx.pm
+|   |   `-- subsets.pm
+|   |-- PDB.pm
+|   |-- PIBASE_core.strx.sql
+|   |-- PQS.pm
+|   |-- SCOP.pm
+|   |-- SGE.pm
+|   |-- auxil.pm
+|   |-- benchmark.pm
+|   |-- build.pm
+|   |-- calc
+|   |   `-- interfaces.pm
+|   |-- create_raw_table_specs.pm
+|   |-- data
+|   |   |-- access.pm
+|   |   |-- calc.pm
+|   |   `-- external
+|   |       |-- ASTRAL.pm
+|   |       `-- PQS.pm
+|   |-- data.pm
+|   |-- interatomic_contacts.pm
+|   |-- kdcontacts.pm
+|   |-- modeller.pm
+|   |-- pilig.pm
+|   |-- raw_table_specs.pm
+|   |-- residue_math.pm
+|   |-- specs.pm
+|   |-- tables_on_disk.pm
+|   `-- web.pm
+`-- pibase.pm
+
+5 directories, 32 files
+\end{verbatim}

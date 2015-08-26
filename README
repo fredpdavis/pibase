@@ -1,0 +1,60 @@
+----------------------------------------------------------------------------
+PIBASE: a comprehensive database of structurally defined protein interfaces.
+v2010. Released September 18, 2010.
+Copyright 2005,2010 Fred P. Davis
+----------------------------------------------------------------------------
+
+http://fredpdavis.com/pibase
+
+o Using PIBASE
+--------------
+ For most users, the web server should prove adequate search functionality.
+ If you are interested in more sophisticated queries, the database contents
+ are available as a mysqldump at the website above, and you can design your
+ own SQL queries.
+
+ This package contains the software used to build the database. This is useful
+ if you want to (1) build your own PIBASE installation, (2) setup a PIBASE
+ webserver, or (3) are interested in routines for dealing with protein
+ structures and protein-protein interactions.
+
+ The code is mostly in Perl, with some C code for more expensive computations.
+
+
+o History
+---------
+ PIBASE was developed at the University of California, San Francisco in the
+ laboratory of Andrej Sali (http://salilab.org) and the Janelia Research Campus
+ of the Howard Hughes Medical Institute (http://janelia.org).
+
+
+o Citing PIBASE
+---------------
+ If you use the software, database, or webserver, please cite:
+ PIBASE: a comprehensive database of structurally defined protein interfaces.
+ Davis FP, Sali A. Bioinformatics (2005) 21(0): 1901-1907.
+
+
+o Contact information
+---------------
+ Fred P. Davis
+ email: fredpdavis@gmail.com
+ web:   http://fredpdavis.com
+
+
+This file is part of PIBASE.
+
+PIBASE is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+PIBASE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with PIBASE.  If not, see <http://www.gnu.org/licenses/>.
+
+----------------------------------------------------------------------------

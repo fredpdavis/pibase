@@ -1,0 +1,3055 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{graphicx}
+\renewcommand{\familydefault}{\sfdefault}
+%\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{makeidx}
+\title{PIBASE code guide. ver 2010\\
+\includegraphics[scale=0.5]{pibase_blue_web.pdf}}
+\author{Fred P. Davis, HHMI-JFRC\\{\tt davisf@janelia.hhmi.org}}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document describes the layout of the PIBASE software package. The documentation for all routines is collected here.
+\end{abstract}
+
+\section{Overview}
+
+The code used to build and access the database is packaged in (1) a perl library, pibase.pm, (2) a caller script build\_pibase.pl that calls the perl routines in the order necessary to build the database, and (3) a set of auxiliary programs, written in C and perl, that mainly perform PDB file operations.
+
+The goal of this manual is to describe the code in sufficient detail to allow you to design custom queries through the perl interface. Here, I first describe the (1) code layout in pibase.pm, (2) document some of the routines. The routines themselves have inline pod documentation. For now, this document just collects all the inline documentation into a single file.
+
+
+\begin{verbatim}
+
+
+perl_api/
+|-- LGL.pm
+|-- pibase
+|   |-- ASTRAL.pm
+|   |-- CATH.pm
+|   |-- PDB
+|   |   |-- chains.pm
+|   |   |-- residues.pm
+|   |   |-- sec_strx.pm
+|   |   `-- subsets.pm
+|   |-- PDB.pm
+|   |-- PIBASE_core.strx.sql
+|   |-- PQS.pm
+|   |-- SCOP.pm
+|   |-- SGE.pm
+|   |-- auxil.pm
+|   |-- benchmark.pm
+|   |-- build.pm
+|   |-- calc
+|   |   `-- interfaces.pm
+|   |-- create_raw_table_specs.pm
+|   |-- data
+|   |   |-- access.pm
+|   |   |-- calc.pm
+|   |   `-- external
+|   |       |-- ASTRAL.pm
+|   |       `-- PQS.pm
+|   |-- data.pm
+|   |-- interatomic_contacts.pm
+|   |-- kdcontacts.pm
+|   |-- modeller.pm
+|   |-- pilig.pm
+|   |-- raw_table_specs.pm
+|   |-- residue_math.pm
+|   |-- specs.pm
+|   |-- tables_on_disk.pm
+|   `-- web.pm
+`-- pibase.pm
+
+5 directories, 32 files
+\end{verbatim}
+
+%%  Latex generated from POD in document /groups/eddy/home/davisf/work/pibase/pibase_work/trunk/docs/../src/perl_api/LGL.pm
+%%  Using the perl module Pod::LaTeX
+%%  Converted on Sun Sep 19 04:36:38 2010
+
+%%  Preamble supplied by user.
+
+\clearpage
+\section{LGL.pm\label{LGL_pm}\index{LGL.pm}}
+
+
+Perl interface to Alex Adai's Large Graph Layout (LGL) program
+
+\subsection*{DESCRIPTION\label{LGL_pm_DESCRIPTION}\index{LGL pm!DESCRIPTION}}
+
+
+The LGL.pm package provides a perl interface to LGL so that edge/node lists can
+be converted into postscript or png images with user-configurable edge and node
+colors, shapes, and sizes.
+
+\subsection*{AUTHOR\label{LGL_pm_AUTHOR}\index{LGL pm!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SYNOPSIS\label{LGL_pm_SYNOPSIS}\index{LGL pm!SYNOPSIS}}
+\subsubsection*{Example 1\label{LGL_pm_Example_1}\index{LGL pm!Example 1}}
+\begin{verbatim}
+   my $edges = {
+      a => { 'b' => 1} ,
+      a => { 'd' => 1} ,
+      a => { 'e' => 1} ,
+      b => { 'c' => 1} ,
+      c => { 'e' => 1} ,
+   } ;
+   my $coords = LGL::edges2coords({edges => $edges}) ;
+   coords2ps({
+      edges => $edges,
+      coords => $coords,
+   }) ;
+\end{verbatim}
+\subsubsection*{Example 2\label{LGL_pm_Example_2}\index{LGL pm!Example 2}}
+\begin{verbatim}
+   my $edges ;
+   $edges->{a}->{b} = 1 ;
+   $edges->{a}->{c} = 1 ;
+   $edges->{b}->{d} = 1 ;
+\end{verbatim}
+\begin{verbatim}
+   my $ncols;
+   $ncols->{"a"} = "black" ;
+   $ncols->{"b"} = "yellow";
+   $ncols->{"c"} = "cyan";
+   $ncols->{"d"} = "red";
+\end{verbatim}
+\begin{verbatim}
+   my $ecols ;
+   $ecols->{a}->{b} = "black" ;
+   $ecols->{a}->{c} = "purple" ;
+   $ecols->{b}->{d} = "brown" ;
+\end{verbatim}
+\begin{verbatim}
+   my $coords = LGL::edges2coords({edges => $edges}) ;
+   LGL::coords2ps({coords => $coords,
+                   edges => $edges,
+                   mag => 100,
+                   ethick => 1,
+                   nrad => 5,
+                   nshape => 'fbox',
+                   ncol => "0.5 0.3 0.2",
+                   ncols => $ncols,
+                   ecols => $ecols,
+                   ecol => "0.2 0.7 0.4"}) ;
+\end{verbatim}
+\subsection*{SUBROUTINES\label{LGL_pm_SUBROUTINES}\index{LGL pm!SUBROUTINES}}
+\subsubsection*{edges2coords()\label{LGL_pm_edges2coords_}\index{LGL pm!edges2coords()}}
+\begin{verbatim}
+   Title:       edges2coords()
+   Function:    Performs graph layout using LGL, returning coordinate info
+   Args:        $_->{edges}->{node1}->{node2} ;
+   Returns:     $_->{node} = [$x, $y] ;
+\end{verbatim}
+\subsubsection*{\_make\_lglconfig()\label{LGL_pm__make_lglconfig_}\index{LGL pm!\ make\ lglconfig()}}
+\begin{verbatim}
+   Title:       _make_lglconfig
+   Function:    Makes a config file for an LGL run.
+   Returns:     nothing
+   Args:        $_->{cnfg_fh} (file handle to display the configuration file to)
+\end{verbatim}
+\subsubsection*{coords2pngmap()\label{LGL_pm_coords2pngmap_}\index{LGL pm!coords2pngmap()}}
+\begin{verbatim}
+   Title:       coords2pngmap
+   Function:    Creates a client-side png image map given coordinate and
+                  edge information. 
+   Returns:     nothing
+   Args:
+      - $_->{ncol}      node color
+      - $_->{ecol}      edge color
+      - $_->{estyle}    edge style (solid, dashed)
+      - $_->{nshape}    node shape (triangle, square, circle)
+      - $_->{nrad}      node radius
+      - $_->{ethick}    edge thickness
+      - $_->{mag}       magnification parameter
+      - $_->{coords}    node coordinate information
+      - $_->{edges}->{n1}->{n2} edge list (nhash)
+      - $_->{map_fh}    output imagemap file name
+      - $_->{nodenames} node names
+      - $_->{nodeurls}  node URLs
+\end{verbatim}
+\subsubsection*{coords2png()\label{LGL_pm_coords2png_}\index{LGL pm!coords2png()}}
+\begin{verbatim}
+   Title:       coords2png
+   Function:    Creates a png image of a graph, given layout info
+   Returns:     GD::image object
+   Args:
+      $_->{coords}      node coordinate information
+      $_->{edges}->{n1}->{n2}   edge list (nhash)
+      $_->{ncol}        default node color
+      $_->{ncols}->{n}  node-specific color
+      $_->{ecol}        default edge color
+      $_->{ecols}->{n1}->{n2}   edge-specific color
+      $_->{estyle}      default edge style - solid or dashed
+      $_->{estyles}->{n1}->{n2} edge-specific style
+      $_->{nshape}      node shape ([f]{triangle|box|circle})
+      $_->{nshapes}->{n}        node-specific shape
+      $_->{nrad}        node radius
+      $_->{ethick}      edge thickness
+      $_->{mag} magnification parameter
+\end{verbatim}
+\subsubsection*{coords2ps()\label{LGL_pm_coords2ps_}\index{LGL pm!coords2ps()}}
+\begin{verbatim}
+   Title:       coords2ps
+   Function:    Creates a postscript image of a graph, given layout info
+   Returns:     nothing
+   Args:
+      $_->{coords}      node coordinate information
+      $_->{edges}->{n1}->{n2}   edge list (nhash)
+      $_->{ncol}        default node color
+      $_->{ncols}->{n}  node-specific color
+      $_->{ecol}        default edge color
+      $_->{ecols}->{n1}->{n2}   edge-specific color
+      $_->{estyle}      default edge style - solid or dashed
+      $_->{estyles}->{n1}->{n2} edge-specific style
+      $_->{nshape}      node shape ([f]{triangle|box|circle})
+      $_->{nshapes}->{n}        node-specific shape
+      $_->{nrad}        node radius
+      $_->{ethick}      edge thickness
+      $_->{mag} magnification parameter
+\end{verbatim}
+\subsubsection*{get\_color2rgb()\label{LGL_pm_get_color2rgb_}\index{LGL pm!get\ color2rgb()}}
+\begin{verbatim}
+   Title:       get_color2rgb()
+   Function:    Returns a hash pointing from color name to rgb (0-1) values
+   Args:        Nothing
+   Returns:     $_->{color} = "$r $g $b" ;
+\end{verbatim}
+\clearpage
+\section{pibase.pm\label{pibase_pm}\index{pibase.pm}}
+
+
+Perl interface to the pibase database
+
+\subsection*{DESCRIPTION\label{pibase_pm_DESCRIPTION}\index{pibase pm!DESCRIPTION}}
+
+
+The pibase.pm perl library contains subroutines used to build and access the
+PIBASE database.
+
+\subsection*{AUTHOR\label{pibase_pm_AUTHOR}\index{pibase pm!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase_pm_SUBROUTINES}\index{pibase pm!SUBROUTINES}}
+\subsubsection*{dbname()\label{pibase_pm_dbname_}\index{pibase pm!dbname()}}
+\begin{verbatim}
+   Title:       dbname()
+   Function:    gets the name of the pibase database
+   Args:        pibase $specs data structure
+   Returns:     returns the name of the pibase mysql database
+\end{verbatim}
+\subsubsection*{get\_specs()\label{pibase_pm_get_specs_}\index{pibase pm!get\ specs()}}
+\begin{verbatim}
+   Title:       get_specs()
+   Function:    gives pibase specifications
+   Args:        pibase $specs data structure
+   Returns:     returns completed pibase data specifications
+\end{verbatim}
+\subsubsection*{connect\_pibase(\$dbspecs)\label{pibase_pm_connect_pibase_dbspecs_}\index{pibase pm!connect\ pibase(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_pibase()
+   Function:    Connects to the pibase database.
+   Args:        $_->{db}        database name
+                $_->{user}      user name
+                $_->{pass}      password
+   Returns:     DBI database handle to pibaes
+\end{verbatim}
+\subsubsection*{connect\_tod(\$dbspecs)\label{pibase_pm_connect_tod_dbspecs_}\index{pibase pm!connect\ tod(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_tod()
+   Function:    Connects to pibase tables on disk (POD).
+   Args:        $_[0] = tablename
+                $_[1] = dbspecs
+                $_[2] = tod_dir = location of tables on disk
+\end{verbatim}
+\begin{verbatim}
+   Returns:     DBI database handle to table on disk
+\end{verbatim}
+\subsubsection*{rawselect\_tod()\label{pibase_pm_rawselect_tod_}\index{pibase pm!rawselect\ tod()}}
+\begin{verbatim}
+   Title:       rawselect_tod()
+   Function:    performs basic SELECT statement queries on a table on disk
+   Args:        $_[0] = SQL SELECT-like statement
+                $_[1] = fullfile
+\end{verbatim}
+\subsubsection*{connect\_metatod()\label{pibase_pm_connect_metatod_}\index{pibase pm!connect\ metatod()}}
+\begin{verbatim}
+   Title:       connect_metatod()
+   Function:    performs basic SELECT statement queries on a meta-table on disk
+   Args:        $_[0] = filename
+                $_[1] = tablename
+                $_[2] = pibase db specs
+   Returns:     dbh DBI:AnyData database handle
+\end{verbatim}
+\subsubsection*{rawselect\_metatod()\label{pibase_pm_rawselect_metatod_}\index{pibase pm!rawselect\ metatod()}}
+\begin{verbatim}
+   Title:       rawselect_metatod()
+   Function:    selects specified fields from a table-on-disk.
+      Note: WHERE clause does not work, this command just recognizes
+            the field names and returns the appropriate columns.
+   Args:        $_[0] = filename
+                $_[1] = SELECT sql command
+   Returns:     array of query results
+\end{verbatim}
+\subsubsection*{sid\_2\_domdir()\label{pibase_pm_sid_2_domdir_}\index{pibase pm!sid\ 2\ domdir()}}
+\begin{verbatim}
+   Title:       sid_2_domdir()
+   Function:    returns the directory name where the PDB file of the
+      specified domain resides.
+   Args:        $_ = subset_id
+   Returns:     directory name
+\end{verbatim}
+\subsubsection*{complete\_pibase\_specs(specs)\label{pibase_pm_complete_pibase_specs_specs_}\index{pibase pm!complete\ pibase\ specs(specs)}}
+\begin{verbatim}
+   Title:       complete_pibase_specs
+   Function:    Fills in blanks in specs with default values.
+   Input:       $_ = specs hashref
+                $_->{db} = database_name
+                $_->{user} = user name
+                $_->{pass} = password
+   Return:      specs - hashref
+\end{verbatim}
+\subsubsection*{load\_bdp\_ids(\$dbh, @results\_type)\label{pibase_pm_load_bdp_ids_dbh_results_type_}\index{pibase pm!load\ bdp\ ids(\$dbh, @results\ type)}}
+\begin{verbatim}
+   Name: load_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+   Return:      results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{todload\_bdp\_ids(@results\_type)\label{pibase_pm_todload_bdp_ids_results_type_}\index{pibase pm!todload\ bdp\ ids(@results\ type)}}
+\begin{verbatim}
+   Name: todload_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+      Analogous to load_bdp_ids() with tables-on-disk instead of DBI
+   Return:      query results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{mysql\_fetchcols(dbh, query)\label{pibase_pm_mysql_fetchcols_dbh_query_}\index{pibase pm!mysql\ fetchcols(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes an n column query and returns a list of array references, where each array reference holds all the valeus for a given column.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL select query
+\end{verbatim}
+\begin{verbatim}
+   Returns:     @_ - list of arrayref
+                $a[i]->[j] ith column, jth row
+\end{verbatim}
+\subsubsection*{mysql\_hashindload(dbh, query)\label{pibase_pm_mysql_hashindload_dbh_query_}\index{pibase pm!mysql\ hashindload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashindload() ;
+   Function:    Processes a 1 column query and returns a hash pointing from
+                  column1 values to row number.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT query
+                $_[2] = substitutor for undefined value
+   Returns:     $_ = hashref
+                $a->{col1} = row number
+\end{verbatim}
+\subsubsection*{array2hash(arrayref, undef\_sub)\label{pibase_pm_array2hash_arrayref_undef_sub_}\index{pibase pm!array2hash(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and returns a hashref with value,
+                index pairs.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, use this value as the hash key
+   Returns:     $_ = hashref
+                $a->{value} = row number
+\end{verbatim}
+\subsubsection*{replace\_undefs(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_arrayref_undef_sub_}\index{pibase pm!replace\ undefs(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined
+                  values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_undefs\_blanks(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_blanks_arrayref_undef_sub_}\index{pibase pm!replace\ undefs\ blanks(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined and
+                  blank values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined/blank substitution - if the cell
+                  contains an undefined or blank value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_char(arrayref, target, replacement)\label{pibase_pm_replace_char_arrayref_target_replacement_}\index{pibase pm!replace\ char(arrayref, target, replacement)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) target values to a specified substitution value.
+   Args:        $_[0] = array reference
+                $_[1] = target value
+                $_[2] = substitution value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{mysql\_hashload(dbh, query)\label{pibase_pm_mysql_hashload_dbh_query_}\index{pibase pm!mysql\ hashload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to column2 values (use for 1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1} = col2
+\end{verbatim}
+\subsubsection*{mysql\_hash2load(dbh, query)\label{pibase_pm_mysql_hash2load_dbh_query_}\index{pibase pm!mysql\ hash2load(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hash2load()
+   Function:    Processes a 3 column query and returns a hash pointing from
+                  column1 values to column2 to column3 values
+                  (use for 1:1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1}->{col2} = col3 ;
+\end{verbatim}
+\subsubsection*{mysql\_hasharrload(dbh, query, undef\_subs)\label{pibase_pm_mysql_hasharrload_dbh_query_undef_subs_}\index{pibase pm!mysql\ hasharrload(dbh, query, undef\ subs)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to an array of column2 values
+                  (use for 1:n relationships)
+   Args:        $_[0] dbh - DBI database handle
+                $_[1] query - SQL format
+                $_[2] undefined value substitutors - list
+   Returns:     $a - hashref to arrayrefs
+   $a->{col1} = [ col2_1, col2_2,... col2_n ]
+\end{verbatim}
+\subsubsection*{mysql\_singleval(dbh, query)\label{pibase_pm_mysql_singleval_dbh_query_}\index{pibase pm!mysql\ singleval(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes a 1 column, 1 row query and returns a scalar
+                  containing the value.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = query - SQL format
+   Return:      $a - scalar
+                $a = "result"
+\end{verbatim}
+\subsubsection*{timestamp()\label{pibase_pm_timestamp_}\index{pibase pm!timestamp()}}
+\begin{verbatim}
+   Function:    Returns a timestamp
+   Args:        none
+   Return:      $_[0] = timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE>
+\end{verbatim}
+\subsubsection*{get\_current\_date\_mysql()\label{pibase_pm_get_current_date_mysql_}\index{pibase pm!get\ current\ date\ mysql()}}
+\begin{verbatim}
+   Function:    Returns current date in YYYY-MM-DD mysql format
+   Args:        none
+   Return:      $_[0] = date: <4-digit YEAR>-<2-digit MONTH>-<2-digit DAY>
+\end{verbatim}
+\subsubsection*{timestampsec()\label{pibase_pm_timestampsec_}\index{pibase pm!timestampsec()}}
+\begin{verbatim}
+   Function:    Returns a second-resolution timestamp
+   Args:        none
+   Return:      timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE><2-digit SECOND>
+\end{verbatim}
+\subsubsection*{mysqlimport(file,dbspecs)\label{pibase_pm_mysqlimport_file_dbspecs_}\index{pibase pm!mysqlimport(file,dbspecs)}}
+\begin{verbatim}
+   Function:    load a file into a mysql database using system(mysqlimport)
+   Return:      $_[0] = records imported
+                $_[1] = records deleted
+                $_[2] = records skipped
+                $_[3] = number of warnings
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0] = filename
+                $_[1] = database specs - hashref
+\end{verbatim}
+\begin{itemize}
+
+\item db =$>$ database name
+\item user =$>$ user name
+\item pass =$>$ password\end{itemize}
+\subsubsection*{mysql\_runcom(dbh, query, vaues)\label{pibase_pm_mysql_runcom_dbh_query_vaues_}\index{pibase pm!mysql\ runcom(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an non-SELECT SQL statement
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL query command or DBI statement handle
+                $_[2] = values- arrayref that hold values for '?' holders
+                        in DBI statement handle
+\end{verbatim}
+\subsubsection*{mysql\_createtable(dbh, tablename, spec)\label{pibase_pm_mysql_createtable_dbh_tablename_spec_}\index{pibase pm!mysql\ createtable(dbh, tablename, spec)}}
+\begin{verbatim}
+   Function:    Creates a table (NOTE: if table already exists, drops it first).
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = table name
+                $_[2] = spec - SQL DDL string
+\end{verbatim}
+\begin{verbatim}
+   Example uasge:
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_createtable($dbh,
+         $tables->{interface_contacts}->{name},
+         $tables->{interface_contacts}->{spec}) ;
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_runcom($dbh,
+         "REPLACE INTO $tables->{interface_contacts}->{meta} ".
+         "( bdp_id, table_name) values($bdp_id, ".
+         "\"$tables->{interface_contacts}->{name}\")") ;
+\end{verbatim}
+\subsubsection*{mysql\_commandline\_query(dbh, query, vaues)\label{pibase_pm_mysql_commandline_query_dbh_query_vaues_}\index{pibase pm!mysql\ commandline\ query(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an SQL SELECT statement on the command line,
+                optionally performs a sort (on command line), and 
+                displays the output to a specified file
+   Return:      none
+   Args:        $->{db_name} = database name
+                $->{sql} = SQL query
+                $->{out_fn} = file to display results to
+                $->{post_sort} = optional specify field to sort
+                $->{sort_order} = optional sort order (defaults ASC)
+\end{verbatim}
+\subsubsection*{locate\_binaries()\label{pibase_pm_locate_binaries_}\index{pibase pm!locate\ binaries()}}
+\begin{verbatim}
+   Function:    Returns location of binaries used in PIBASE associated activities
+   Return:      $_->{program} = program location.
+      perl, zcat, rigor, subset_extractor, altloc_check
+   Args:        none
+\end{verbatim}
+\subsubsection*{safe\_move()\label{pibase_pm_safe_move_}\index{pibase pm!safe\ move()}}
+\begin{verbatim}
+   Function:    Safely move a file to a directory (using File::Copy::move),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\subsubsection*{safe\_copy()\label{pibase_pm_safe_copy_}\index{pibase pm!safe\ copy()}}
+\begin{verbatim}
+   Function:    Safely copy a file to a directory (using File::Copy::copy),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\clearpage
+\section{pibase.pm\label{pibase_pm}\index{pibase.pm}}
+
+
+Perl interface to the pibase database
+
+\subsection*{DESCRIPTION\label{pibase_pm_DESCRIPTION}\index{pibase pm!DESCRIPTION}}
+
+
+The pibase.pm perl library contains subroutines used to build and access the
+PIBASE database.
+
+\subsection*{AUTHOR\label{pibase_pm_AUTHOR}\index{pibase pm!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase_pm_SUBROUTINES}\index{pibase pm!SUBROUTINES}}
+\subsubsection*{dbname()\label{pibase_pm_dbname_}\index{pibase pm!dbname()}}
+\begin{verbatim}
+   Title:       dbname()
+   Function:    gets the name of the pibase database
+   Args:        pibase $specs data structure
+   Returns:     returns the name of the pibase mysql database
+\end{verbatim}
+\subsubsection*{get\_specs()\label{pibase_pm_get_specs_}\index{pibase pm!get\ specs()}}
+\begin{verbatim}
+   Title:       get_specs()
+   Function:    gives pibase specifications
+   Args:        pibase $specs data structure
+   Returns:     returns completed pibase data specifications
+\end{verbatim}
+\subsubsection*{connect\_pibase(\$dbspecs)\label{pibase_pm_connect_pibase_dbspecs_}\index{pibase pm!connect\ pibase(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_pibase()
+   Function:    Connects to the pibase database.
+   Args:        $_->{db}        database name
+                $_->{user}      user name
+                $_->{pass}      password
+   Returns:     DBI database handle to pibaes
+\end{verbatim}
+\subsubsection*{connect\_tod(\$dbspecs)\label{pibase_pm_connect_tod_dbspecs_}\index{pibase pm!connect\ tod(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_tod()
+   Function:    Connects to pibase tables on disk (POD).
+   Args:        $_[0] = tablename
+                $_[1] = dbspecs
+                $_[2] = tod_dir = location of tables on disk
+\end{verbatim}
+\begin{verbatim}
+   Returns:     DBI database handle to table on disk
+\end{verbatim}
+\subsubsection*{rawselect\_tod()\label{pibase_pm_rawselect_tod_}\index{pibase pm!rawselect\ tod()}}
+\begin{verbatim}
+   Title:       rawselect_tod()
+   Function:    performs basic SELECT statement queries on a table on disk
+   Args:        $_[0] = SQL SELECT-like statement
+                $_[1] = fullfile
+\end{verbatim}
+\subsubsection*{connect\_metatod()\label{pibase_pm_connect_metatod_}\index{pibase pm!connect\ metatod()}}
+\begin{verbatim}
+   Title:       connect_metatod()
+   Function:    performs basic SELECT statement queries on a meta-table on disk
+   Args:        $_[0] = filename
+                $_[1] = tablename
+                $_[2] = pibase db specs
+   Returns:     dbh DBI:AnyData database handle
+\end{verbatim}
+\subsubsection*{rawselect\_metatod()\label{pibase_pm_rawselect_metatod_}\index{pibase pm!rawselect\ metatod()}}
+\begin{verbatim}
+   Title:       rawselect_metatod()
+   Function:    selects specified fields from a table-on-disk.
+      Note: WHERE clause does not work, this command just recognizes
+            the field names and returns the appropriate columns.
+   Args:        $_[0] = filename
+                $_[1] = SELECT sql command
+   Returns:     array of query results
+\end{verbatim}
+\subsubsection*{sid\_2\_domdir()\label{pibase_pm_sid_2_domdir_}\index{pibase pm!sid\ 2\ domdir()}}
+\begin{verbatim}
+   Title:       sid_2_domdir()
+   Function:    returns the directory name where the PDB file of the
+      specified domain resides.
+   Args:        $_ = subset_id
+   Returns:     directory name
+\end{verbatim}
+\subsubsection*{complete\_pibase\_specs(specs)\label{pibase_pm_complete_pibase_specs_specs_}\index{pibase pm!complete\ pibase\ specs(specs)}}
+\begin{verbatim}
+   Title:       complete_pibase_specs
+   Function:    Fills in blanks in specs with default values.
+   Input:       $_ = specs hashref
+                $_->{db} = database_name
+                $_->{user} = user name
+                $_->{pass} = password
+   Return:      specs - hashref
+\end{verbatim}
+\subsubsection*{load\_bdp\_ids(\$dbh, @results\_type)\label{pibase_pm_load_bdp_ids_dbh_results_type_}\index{pibase pm!load\ bdp\ ids(\$dbh, @results\ type)}}
+\begin{verbatim}
+   Name: load_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+   Return:      results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{todload\_bdp\_ids(@results\_type)\label{pibase_pm_todload_bdp_ids_results_type_}\index{pibase pm!todload\ bdp\ ids(@results\ type)}}
+\begin{verbatim}
+   Name: todload_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+      Analogous to load_bdp_ids() with tables-on-disk instead of DBI
+   Return:      query results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{mysql\_fetchcols(dbh, query)\label{pibase_pm_mysql_fetchcols_dbh_query_}\index{pibase pm!mysql\ fetchcols(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes an n column query and returns a list of array references, where each array reference holds all the valeus for a given column.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL select query
+\end{verbatim}
+\begin{verbatim}
+   Returns:     @_ - list of arrayref
+                $a[i]->[j] ith column, jth row
+\end{verbatim}
+\subsubsection*{mysql\_hashindload(dbh, query)\label{pibase_pm_mysql_hashindload_dbh_query_}\index{pibase pm!mysql\ hashindload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashindload() ;
+   Function:    Processes a 1 column query and returns a hash pointing from
+                  column1 values to row number.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT query
+                $_[2] = substitutor for undefined value
+   Returns:     $_ = hashref
+                $a->{col1} = row number
+\end{verbatim}
+\subsubsection*{array2hash(arrayref, undef\_sub)\label{pibase_pm_array2hash_arrayref_undef_sub_}\index{pibase pm!array2hash(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and returns a hashref with value,
+                index pairs.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, use this value as the hash key
+   Returns:     $_ = hashref
+                $a->{value} = row number
+\end{verbatim}
+\subsubsection*{replace\_undefs(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_arrayref_undef_sub_}\index{pibase pm!replace\ undefs(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined
+                  values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_undefs\_blanks(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_blanks_arrayref_undef_sub_}\index{pibase pm!replace\ undefs\ blanks(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined and
+                  blank values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined/blank substitution - if the cell
+                  contains an undefined or blank value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_char(arrayref, target, replacement)\label{pibase_pm_replace_char_arrayref_target_replacement_}\index{pibase pm!replace\ char(arrayref, target, replacement)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) target values to a specified substitution value.
+   Args:        $_[0] = array reference
+                $_[1] = target value
+                $_[2] = substitution value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{mysql\_hashload(dbh, query)\label{pibase_pm_mysql_hashload_dbh_query_}\index{pibase pm!mysql\ hashload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to column2 values (use for 1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1} = col2
+\end{verbatim}
+\subsubsection*{mysql\_hash2load(dbh, query)\label{pibase_pm_mysql_hash2load_dbh_query_}\index{pibase pm!mysql\ hash2load(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hash2load()
+   Function:    Processes a 3 column query and returns a hash pointing from
+                  column1 values to column2 to column3 values
+                  (use for 1:1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1}->{col2} = col3 ;
+\end{verbatim}
+\subsubsection*{mysql\_hasharrload(dbh, query, undef\_subs)\label{pibase_pm_mysql_hasharrload_dbh_query_undef_subs_}\index{pibase pm!mysql\ hasharrload(dbh, query, undef\ subs)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to an array of column2 values
+                  (use for 1:n relationships)
+   Args:        $_[0] dbh - DBI database handle
+                $_[1] query - SQL format
+                $_[2] undefined value substitutors - list
+   Returns:     $a - hashref to arrayrefs
+   $a->{col1} = [ col2_1, col2_2,... col2_n ]
+\end{verbatim}
+\subsubsection*{mysql\_singleval(dbh, query)\label{pibase_pm_mysql_singleval_dbh_query_}\index{pibase pm!mysql\ singleval(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes a 1 column, 1 row query and returns a scalar
+                  containing the value.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = query - SQL format
+   Return:      $a - scalar
+                $a = "result"
+\end{verbatim}
+\subsubsection*{timestamp()\label{pibase_pm_timestamp_}\index{pibase pm!timestamp()}}
+\begin{verbatim}
+   Function:    Returns a timestamp
+   Args:        none
+   Return:      $_[0] = timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE>
+\end{verbatim}
+\subsubsection*{get\_current\_date\_mysql()\label{pibase_pm_get_current_date_mysql_}\index{pibase pm!get\ current\ date\ mysql()}}
+\begin{verbatim}
+   Function:    Returns current date in YYYY-MM-DD mysql format
+   Args:        none
+   Return:      $_[0] = date: <4-digit YEAR>-<2-digit MONTH>-<2-digit DAY>
+\end{verbatim}
+\subsubsection*{timestampsec()\label{pibase_pm_timestampsec_}\index{pibase pm!timestampsec()}}
+\begin{verbatim}
+   Function:    Returns a second-resolution timestamp
+   Args:        none
+   Return:      timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE><2-digit SECOND>
+\end{verbatim}
+\subsubsection*{mysqlimport(file,dbspecs)\label{pibase_pm_mysqlimport_file_dbspecs_}\index{pibase pm!mysqlimport(file,dbspecs)}}
+\begin{verbatim}
+   Function:    load a file into a mysql database using system(mysqlimport)
+   Return:      $_[0] = records imported
+                $_[1] = records deleted
+                $_[2] = records skipped
+                $_[3] = number of warnings
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0] = filename
+                $_[1] = database specs - hashref
+\end{verbatim}
+\begin{itemize}
+
+\item db =$>$ database name
+\item user =$>$ user name
+\item pass =$>$ password\end{itemize}
+\subsubsection*{mysql\_runcom(dbh, query, vaues)\label{pibase_pm_mysql_runcom_dbh_query_vaues_}\index{pibase pm!mysql\ runcom(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an non-SELECT SQL statement
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL query command or DBI statement handle
+                $_[2] = values- arrayref that hold values for '?' holders
+                        in DBI statement handle
+\end{verbatim}
+\subsubsection*{mysql\_createtable(dbh, tablename, spec)\label{pibase_pm_mysql_createtable_dbh_tablename_spec_}\index{pibase pm!mysql\ createtable(dbh, tablename, spec)}}
+\begin{verbatim}
+   Function:    Creates a table (NOTE: if table already exists, drops it first).
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = table name
+                $_[2] = spec - SQL DDL string
+\end{verbatim}
+\begin{verbatim}
+   Example uasge:
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_createtable($dbh,
+         $tables->{interface_contacts}->{name},
+         $tables->{interface_contacts}->{spec}) ;
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_runcom($dbh,
+         "REPLACE INTO $tables->{interface_contacts}->{meta} ".
+         "( bdp_id, table_name) values($bdp_id, ".
+         "\"$tables->{interface_contacts}->{name}\")") ;
+\end{verbatim}
+\subsubsection*{mysql\_commandline\_query(dbh, query, vaues)\label{pibase_pm_mysql_commandline_query_dbh_query_vaues_}\index{pibase pm!mysql\ commandline\ query(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an SQL SELECT statement on the command line,
+                optionally performs a sort (on command line), and 
+                displays the output to a specified file
+   Return:      none
+   Args:        $->{db_name} = database name
+                $->{sql} = SQL query
+                $->{out_fn} = file to display results to
+                $->{post_sort} = optional specify field to sort
+                $->{sort_order} = optional sort order (defaults ASC)
+\end{verbatim}
+\subsubsection*{locate\_binaries()\label{pibase_pm_locate_binaries_}\index{pibase pm!locate\ binaries()}}
+\begin{verbatim}
+   Function:    Returns location of binaries used in PIBASE associated activities
+   Return:      $_->{program} = program location.
+      perl, zcat, rigor, subset_extractor, altloc_check
+   Args:        none
+\end{verbatim}
+\subsubsection*{safe\_move()\label{pibase_pm_safe_move_}\index{pibase pm!safe\ move()}}
+\begin{verbatim}
+   Function:    Safely move a file to a directory (using File::Copy::move),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\subsubsection*{safe\_copy()\label{pibase_pm_safe_copy_}\index{pibase pm!safe\ copy()}}
+\begin{verbatim}
+   Function:    Safely copy a file to a directory (using File::Copy::copy),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\clearpage
+\section{pibase.pm\label{pibase_pm}\index{pibase.pm}}
+
+
+Perl interface to the pibase database
+
+\subsection*{DESCRIPTION\label{pibase_pm_DESCRIPTION}\index{pibase pm!DESCRIPTION}}
+
+
+The pibase.pm perl library contains subroutines used to build and access the
+PIBASE database.
+
+\subsection*{AUTHOR\label{pibase_pm_AUTHOR}\index{pibase pm!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase_pm_SUBROUTINES}\index{pibase pm!SUBROUTINES}}
+\subsubsection*{dbname()\label{pibase_pm_dbname_}\index{pibase pm!dbname()}}
+\begin{verbatim}
+   Title:       dbname()
+   Function:    gets the name of the pibase database
+   Args:        pibase $specs data structure
+   Returns:     returns the name of the pibase mysql database
+\end{verbatim}
+\subsubsection*{get\_specs()\label{pibase_pm_get_specs_}\index{pibase pm!get\ specs()}}
+\begin{verbatim}
+   Title:       get_specs()
+   Function:    gives pibase specifications
+   Args:        pibase $specs data structure
+   Returns:     returns completed pibase data specifications
+\end{verbatim}
+\subsubsection*{connect\_pibase(\$dbspecs)\label{pibase_pm_connect_pibase_dbspecs_}\index{pibase pm!connect\ pibase(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_pibase()
+   Function:    Connects to the pibase database.
+   Args:        $_->{db}        database name
+                $_->{user}      user name
+                $_->{pass}      password
+   Returns:     DBI database handle to pibaes
+\end{verbatim}
+\subsubsection*{connect\_tod(\$dbspecs)\label{pibase_pm_connect_tod_dbspecs_}\index{pibase pm!connect\ tod(\$dbspecs)}}
+\begin{verbatim}
+   Title:       connect_tod()
+   Function:    Connects to pibase tables on disk (POD).
+   Args:        $_[0] = tablename
+                $_[1] = dbspecs
+                $_[2] = tod_dir = location of tables on disk
+\end{verbatim}
+\begin{verbatim}
+   Returns:     DBI database handle to table on disk
+\end{verbatim}
+\subsubsection*{rawselect\_tod()\label{pibase_pm_rawselect_tod_}\index{pibase pm!rawselect\ tod()}}
+\begin{verbatim}
+   Title:       rawselect_tod()
+   Function:    performs basic SELECT statement queries on a table on disk
+   Args:        $_[0] = SQL SELECT-like statement
+                $_[1] = fullfile
+\end{verbatim}
+\subsubsection*{connect\_metatod()\label{pibase_pm_connect_metatod_}\index{pibase pm!connect\ metatod()}}
+\begin{verbatim}
+   Title:       connect_metatod()
+   Function:    performs basic SELECT statement queries on a meta-table on disk
+   Args:        $_[0] = filename
+                $_[1] = tablename
+                $_[2] = pibase db specs
+   Returns:     dbh DBI:AnyData database handle
+\end{verbatim}
+\subsubsection*{rawselect\_metatod()\label{pibase_pm_rawselect_metatod_}\index{pibase pm!rawselect\ metatod()}}
+\begin{verbatim}
+   Title:       rawselect_metatod()
+   Function:    selects specified fields from a table-on-disk.
+      Note: WHERE clause does not work, this command just recognizes
+            the field names and returns the appropriate columns.
+   Args:        $_[0] = filename
+                $_[1] = SELECT sql command
+   Returns:     array of query results
+\end{verbatim}
+\subsubsection*{sid\_2\_domdir()\label{pibase_pm_sid_2_domdir_}\index{pibase pm!sid\ 2\ domdir()}}
+\begin{verbatim}
+   Title:       sid_2_domdir()
+   Function:    returns the directory name where the PDB file of the
+      specified domain resides.
+   Args:        $_ = subset_id
+   Returns:     directory name
+\end{verbatim}
+\subsubsection*{complete\_pibase\_specs(specs)\label{pibase_pm_complete_pibase_specs_specs_}\index{pibase pm!complete\ pibase\ specs(specs)}}
+\begin{verbatim}
+   Title:       complete_pibase_specs
+   Function:    Fills in blanks in specs with default values.
+   Input:       $_ = specs hashref
+                $_->{db} = database_name
+                $_->{user} = user name
+                $_->{pass} = password
+   Return:      specs - hashref
+\end{verbatim}
+\subsubsection*{load\_bdp\_ids(\$dbh, @results\_type)\label{pibase_pm_load_bdp_ids_dbh_results_type_}\index{pibase pm!load\ bdp\ ids(\$dbh, @results\ type)}}
+\begin{verbatim}
+   Name: load_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+   Return:      results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{todload\_bdp\_ids(@results\_type)\label{pibase_pm_todload_bdp_ids_results_type_}\index{pibase pm!todload\ bdp\ ids(@results\ type)}}
+\begin{verbatim}
+   Name: todload_bdp_ids()
+   Function:    Returns bdp_id and depending on results_type
+                specified, its relation to bdp_path and pdb_id
+                in a variety of forms.
+      Analogous to load_bdp_ids() with tables-on-disk instead of DBI
+   Return:      query results
+   Args:        $_[0] = DBI dbh handle
+                $_[1] = results type
+\end{verbatim}
+\begin{itemize}
+
+\item path\_2\_bdp\_id (hash) [default]
+\item bdp\_id\_2\_path (hash)
+\item bdp\_id\_2\_pdb\_id (hash)
+\item bdp\_id\_2\_raw\_pdb (hash)
+\item pdb\_id\_2\_bdp\_id (hash)
+\item bdp\_id (array)\end{itemize}
+\subsubsection*{mysql\_fetchcols(dbh, query)\label{pibase_pm_mysql_fetchcols_dbh_query_}\index{pibase pm!mysql\ fetchcols(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes an n column query and returns a list of array references, where each array reference holds all the valeus for a given column.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL select query
+\end{verbatim}
+\begin{verbatim}
+   Returns:     @_ - list of arrayref
+                $a[i]->[j] ith column, jth row
+\end{verbatim}
+\subsubsection*{mysql\_hashindload(dbh, query)\label{pibase_pm_mysql_hashindload_dbh_query_}\index{pibase pm!mysql\ hashindload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashindload() ;
+   Function:    Processes a 1 column query and returns a hash pointing from
+                  column1 values to row number.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT query
+                $_[2] = substitutor for undefined value
+   Returns:     $_ = hashref
+                $a->{col1} = row number
+\end{verbatim}
+\subsubsection*{array2hash(arrayref, undef\_sub)\label{pibase_pm_array2hash_arrayref_undef_sub_}\index{pibase pm!array2hash(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and returns a hashref with value,
+                index pairs.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, use this value as the hash key
+   Returns:     $_ = hashref
+                $a->{value} = row number
+\end{verbatim}
+\subsubsection*{replace\_undefs(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_arrayref_undef_sub_}\index{pibase pm!replace\ undefs(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined
+                  values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined substitution - if the cell contains an
+                  undefined value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_undefs\_blanks(arrayref, undef\_sub)\label{pibase_pm_replace_undefs_blanks_arrayref_undef_sub_}\index{pibase pm!replace\ undefs\ blanks(arrayref, undef\ sub)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) undefined and
+                  blank values to a specified substitution value.
+   Args:        $_[0] = array references
+                $_[1] = undefined/blank substitution - if the cell
+                  contains an undefined or blank value, replace with this value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{replace\_char(arrayref, target, replacement)\label{pibase_pm_replace_char_arrayref_target_replacement_}\index{pibase pm!replace\ char(arrayref, target, replacement)}}
+\begin{verbatim}
+   Name:        array2hash() ;
+   Function:    Takes an array reference and replaces (inplace) target values to a specified substitution value.
+   Args:        $_[0] = array reference
+                $_[1] = target value
+                $_[2] = substitution value
+   Returns:     $_ = array reference
+\end{verbatim}
+\subsubsection*{mysql\_hashload(dbh, query)\label{pibase_pm_mysql_hashload_dbh_query_}\index{pibase pm!mysql\ hashload(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to column2 values (use for 1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1} = col2
+\end{verbatim}
+\subsubsection*{mysql\_hash2load(dbh, query)\label{pibase_pm_mysql_hash2load_dbh_query_}\index{pibase pm!mysql\ hash2load(dbh, query)}}
+\begin{verbatim}
+   Name:        mysql_hash2load()
+   Function:    Processes a 3 column query and returns a hash pointing from
+                  column1 values to column2 to column3 values
+                  (use for 1:1:1 relationships)
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL SELECT command
+   Returns:     $a - hashref
+                $a->{col1}->{col2} = col3 ;
+\end{verbatim}
+\subsubsection*{mysql\_hasharrload(dbh, query, undef\_subs)\label{pibase_pm_mysql_hasharrload_dbh_query_undef_subs_}\index{pibase pm!mysql\ hasharrload(dbh, query, undef\ subs)}}
+\begin{verbatim}
+   Name:        mysql_hashload()
+   Function:    Processes a 2 column query and returns a hash pointing from
+                  column1 values to an array of column2 values
+                  (use for 1:n relationships)
+   Args:        $_[0] dbh - DBI database handle
+                $_[1] query - SQL format
+                $_[2] undefined value substitutors - list
+   Returns:     $a - hashref to arrayrefs
+   $a->{col1} = [ col2_1, col2_2,... col2_n ]
+\end{verbatim}
+\subsubsection*{mysql\_singleval(dbh, query)\label{pibase_pm_mysql_singleval_dbh_query_}\index{pibase pm!mysql\ singleval(dbh, query)}}
+\begin{verbatim}
+   Function:    Processes a 1 column, 1 row query and returns a scalar
+                  containing the value.
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = query - SQL format
+   Return:      $a - scalar
+                $a = "result"
+\end{verbatim}
+\subsubsection*{timestamp()\label{pibase_pm_timestamp_}\index{pibase pm!timestamp()}}
+\begin{verbatim}
+   Function:    Returns a timestamp
+   Args:        none
+   Return:      $_[0] = timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE>
+\end{verbatim}
+\subsubsection*{get\_current\_date\_mysql()\label{pibase_pm_get_current_date_mysql_}\index{pibase pm!get\ current\ date\ mysql()}}
+\begin{verbatim}
+   Function:    Returns current date in YYYY-MM-DD mysql format
+   Args:        none
+   Return:      $_[0] = date: <4-digit YEAR>-<2-digit MONTH>-<2-digit DAY>
+\end{verbatim}
+\subsubsection*{timestampsec()\label{pibase_pm_timestampsec_}\index{pibase pm!timestampsec()}}
+\begin{verbatim}
+   Function:    Returns a second-resolution timestamp
+   Args:        none
+   Return:      timestamp: <4-digit YEAR><2-digit MONTH><2-digit DAY>_
+                  <2-digit HOUR><2-digit MINUTE><2-digit SECOND>
+\end{verbatim}
+\subsubsection*{mysqlimport(file,dbspecs)\label{pibase_pm_mysqlimport_file_dbspecs_}\index{pibase pm!mysqlimport(file,dbspecs)}}
+\begin{verbatim}
+   Function:    load a file into a mysql database using system(mysqlimport)
+   Return:      $_[0] = records imported
+                $_[1] = records deleted
+                $_[2] = records skipped
+                $_[3] = number of warnings
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0] = filename
+                $_[1] = database specs - hashref
+\end{verbatim}
+\begin{itemize}
+
+\item db =$>$ database name
+\item user =$>$ user name
+\item pass =$>$ password\end{itemize}
+\subsubsection*{mysql\_runcom(dbh, query, vaues)\label{pibase_pm_mysql_runcom_dbh_query_vaues_}\index{pibase pm!mysql\ runcom(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an non-SELECT SQL statement
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = SQL query command or DBI statement handle
+                $_[2] = values- arrayref that hold values for '?' holders
+                        in DBI statement handle
+\end{verbatim}
+\subsubsection*{mysql\_createtable(dbh, tablename, spec)\label{pibase_pm_mysql_createtable_dbh_tablename_spec_}\index{pibase pm!mysql\ createtable(dbh, tablename, spec)}}
+\begin{verbatim}
+   Function:    Creates a table (NOTE: if table already exists, drops it first).
+   Return:      none
+   Args:        $_[0] = dbh - DBI database handle
+                $_[1] = table name
+                $_[2] = spec - SQL DDL string
+\end{verbatim}
+\begin{verbatim}
+   Example uasge:
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_createtable($dbh,
+         $tables->{interface_contacts}->{name},
+         $tables->{interface_contacts}->{spec}) ;
+\end{verbatim}
+\begin{verbatim}
+      pibase::mysql_runcom($dbh,
+         "REPLACE INTO $tables->{interface_contacts}->{meta} ".
+         "( bdp_id, table_name) values($bdp_id, ".
+         "\"$tables->{interface_contacts}->{name}\")") ;
+\end{verbatim}
+\subsubsection*{mysql\_commandline\_query(dbh, query, vaues)\label{pibase_pm_mysql_commandline_query_dbh_query_vaues_}\index{pibase pm!mysql\ commandline\ query(dbh, query, vaues)}}
+\begin{verbatim}
+   Function:    Runs an SQL SELECT statement on the command line,
+                optionally performs a sort (on command line), and 
+                displays the output to a specified file
+   Return:      none
+   Args:        $->{db_name} = database name
+                $->{sql} = SQL query
+                $->{out_fn} = file to display results to
+                $->{post_sort} = optional specify field to sort
+                $->{sort_order} = optional sort order (defaults ASC)
+\end{verbatim}
+\subsubsection*{locate\_binaries()\label{pibase_pm_locate_binaries_}\index{pibase pm!locate\ binaries()}}
+\begin{verbatim}
+   Function:    Returns location of binaries used in PIBASE associated activities
+   Return:      $_->{program} = program location.
+      perl, zcat, rigor, subset_extractor, altloc_check
+   Args:        none
+\end{verbatim}
+\subsubsection*{safe\_move()\label{pibase_pm_safe_move_}\index{pibase pm!safe\ move()}}
+\begin{verbatim}
+   Function:    Safely move a file to a directory (using File::Copy::move),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\subsubsection*{safe\_copy()\label{pibase_pm_safe_copy_}\index{pibase pm!safe\ copy()}}
+\begin{verbatim}
+   Function:    Safely copy a file to a directory (using File::Copy::copy),
+                  retries 14 times, and prints an error if it didnt work
+   Return:      nothing
+   Args:        $_[0] = source filename
+                $_[1] = target directory
+\end{verbatim}
+\clearpage
+\section{pibase::ASTRAL\label{pibase::ASTRAL}\index{pibase::ASTRAL}}
+
+
+Perl module to access ASTRAL data
+
+\subsection*{DESCRIPTION\label{pibase::ASTRAL_DESCRIPTION}\index{pibase::ASTRAL!DESCRIPTION}}
+
+
+Perl module that contains routines for accessing ASTRAL data, for
+use in clustering PIBASE interfaces
+
+\subsection*{AUTHOR\label{pibase::ASTRAL_AUTHOR}\index{pibase::ASTRAL!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::ASTRAL_SUBROUTINES}\index{pibase::ASTRAL!SUBROUTINES}}
+\subsubsection*{load\_asteroids\_aln()\label{pibase::ASTRAL_load_asteroids_aln_}\index{pibase::ASTRAL!load\ asteroids\ aln()}}
+\begin{verbatim}
+   Title:       load_asteroids_aln()
+   Function:    Loads an ASTRAL ASTEROIDS alignment file
+   Args:        $_->{aln_fn}    name of ASTERIODS alignment file
+                $_->{seq_fn}    name of corresponding ASTEROIDS sequence file
+                $_->{allchains} 
+                $_->{gdseqh}    data structure holding contents of gdseqh file
+                $_->{seqclcont100}
+                $_->{seqcl100}
+                $_->{doms}      optional hash list of domains to load.
+   Returns:     parse_aln_raf() alignment structure
+\end{verbatim}
+\subsubsection*{raf\_preload()\label{pibase::ASTRAL_raf_preload_}\index{pibase::ASTRAL!raf\ preload()}}
+\begin{verbatim}
+   Title:       raf_preload()
+   Function:    Loads the ASTRAL raf file
+   Args:        $_->{fn}        name of the ASTRAL raf file
+   Returns:     ->{pdb_chain} = "RAF line contents"
+\end{verbatim}
+\subsubsection*{parse\_raf\_line()\label{pibase::ASTRAL_parse_raf_line_}\index{pibase::ASTRAL!parse\ raf\ line()}}
+\begin{verbatim}
+   Title:       parse_raf_line()
+   Function:    Parses a line from ASTRAL raf file
+   Args:        $_->{line}      RAF line
+                $_->{headlength}        length of RAF file header
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{atomresno_first}     ATOM residue number of first residue
+                ->{atomresno_last}      ATOM residue number of last residue
+                ->{atomresna}   = [ ATOM residue name 1,2, ... ]
+                ->{atomresno}   = [ ATOM residue number 1,2, ... ]
+                ->{seqresna}    = [ sequence residue name 1,2, ... ]
+                ->{seqresno}    = [ sequence residue number 1,2, ... ]
+                ->{seqresno2ind}->{seqresno} = index in @{->{seqresno}}
+                ->{ind2seqresno}->{index in @{->{seqresno}}} = seqresno
+                ->{atom2seqresno_back}->{$atomresno} = seqresno
+                ->{atomresno2ind_back}->{$atomresno} = seqresno index
+                ->{seq2atomresno}->{$seqresno} = $atomresno ;
+                ->{atom2seqresno}->{$atomresno} = $seqresno ;
+                ->{atomresno2ind}->{$atomresno} = $#{$res->{seqresno}} ;
+                ->{ind2atomresno}->{$#{$res->{seqresno}}} = $atomresno  ;
+\end{verbatim}
+\subsubsection*{read\_asteroids\_aln()\label{pibase::ASTRAL_read_asteroids_aln_}\index{pibase::ASTRAL!read\ asteroids\ aln()}}
+\begin{verbatim}
+   Title:       read_asteroids_aln()
+   Function:    Reads an ASTEROIDS alignment file
+   Args:        $_->{aln_fn} ASTEROIDS alignment file name
+                $_->{seq_fn} corresponding ASTEROIDS sequence file name
+                $_->{allchains}->{domain} = pdb chain
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{seq}->{domain} = 'DOMAINSEQVENCE';
+                ->{defstring}->{domain} = definition line from alignment
+                ->{class}->{domain} = SCOP class
+                ->{aln}->{domain} = domain sequence froma alignment
+                ->{pdb}->{domain} = PDB code for the domain
+                ->{frags}->{domain} = [{b => startresidue, e => endresidue},...]
+                ->{alnlength} = alignment length
+\end{verbatim}
+\subsubsection*{parse\_aln\_raf()\label{pibase::ASTRAL_parse_aln_raf_}\index{pibase::ASTRAL!parse\ aln\ raf()}}
+\begin{verbatim}
+   Title:       parse_aln_raf()
+   Function:    Reads an ASTEROIDS alignment file
+   Args:        $_->{alndata}  - alignment data from read_asteroids_aln()
+                $_->{raf} - RAF data from raf_preload()
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{pos2resno}->{domain}->{alignment position} = ATOM resno
+                ->{resno2pos}->{domain}->{ATOM resno} = alignment position
+\end{verbatim}
+\subsubsection*{load\_astral\_headers()\label{pibase::ASTRAL_load_astral_headers_}\index{pibase::ASTRAL!load\ astral\ headers()}}
+\begin{verbatim}
+   Title:       load_astral_headers()
+   Function:    Loads ASTRAL headers
+   Args:        $_->{fn} - alignment file name
+                $_->{raf} - RAF data from raf_preload()
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{gdseqh}->{defstring}->{domain} = domain definition string
+                ->{gdseqh}->{class}->{domain} = domain class
+                ->{gdseqh}->{pdb}->{domain} = domain PDB code
+                ->{gdseqh}->{frags}->{domain} = [{b => startres, e => endres}...]
+                ->{gdom}->{domain (w d prefix)} = domain (w g prefix)
+\end{verbatim}
+\subsubsection*{load\_astral\_clusters()\label{pibase::ASTRAL_load_astral_clusters_}\index{pibase::ASTRAL!load\ astral\ clusters()}}
+\begin{verbatim}
+   Title:       load_astral_clusters()
+   Function:    Loads ASTRAL sequence cluster definitions
+   Args:        $_->{out} - pointer to hash to hold output
+                $_->{pibase_specs} -  pibase_specs structure
+\end{verbatim}
+\begin{verbatim}
+   Returns:     Nothing - populates the specified $_->{out}
+                {out}->{seqcl}->{seq identity}->{scop identifier} = cluster num
+                {out}->{seqcl2cont}->{seq identity}->{cluster num} = [scop id,...]
+\end{verbatim}
+\subsubsection*{get\_astral\_classlist()\label{pibase::ASTRAL_get_astral_classlist_}\index{pibase::ASTRAL!get\ astral\ classlist()}}
+\begin{verbatim}
+   Title:       get_astral_classlist()
+   Function:    Get list of SCOP classes in the ASTRAL compendium
+   Args:        $_->{pibase_specs} -  pibase_specs structure
+   Returns:     Nothing - populates the specified $_->{out}
+                ->{fam}->{scop_family} = number of domains in the family
+                ->{sf}->{scop_superfamily} = number of domains in the superfamily
+\end{verbatim}
+\clearpage
+\section{pibase::CATH\label{pibase::CATH}\index{pibase::CATH}}
+
+
+Interface for CATH domain database data processing
+
+\subsection*{DESCRIPTION\label{pibase::CATH_DESCRIPTION}\index{pibase::CATH!DESCRIPTION}}
+
+
+This module contains routines to process and reformat CATH release files
+for PIBASE import.  Files are from: http://www.cathdb.info
+
+\subsection*{AUTHOR\label{pibase::CATH_AUTHOR}\index{pibase::CATH!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::CATH_SUBROUTINES}\index{pibase::CATH!SUBROUTINES}}
+\subsubsection*{cath\_clean\_cddf()\label{pibase::CATH_cath_clean_cddf_}\index{pibase::CATH!cath\ clean\ cddf()}}
+\begin{verbatim}
+   Title:       cath_clean_cddf()
+   Function:    cleans the CATH CDDF file
+   STDIN:       CATH CDDF file
+   STDOUT:      cleaned up CATH CDDF file
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{cath\_parse\_cdf\_domainlist()\label{pibase::CATH_cath_parse_cdf_domainlist_}\index{pibase::CATH!cath\ parse\ cdf\ domainlist()}}
+\begin{verbatim}
+   Title:       cath_parse_cdf_domainlist()
+   Function:    cleans the CATH CDDF file
+   STDIN:       CATH CDDF file
+   STDOUT:      cleaned up CATH CDDF file
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{cath\_clean\_clf()\label{pibase::CATH_cath_clean_clf_}\index{pibase::CATH!cath\ clean\ clf()}}
+\begin{verbatim}
+   Title:       cath_clean_clf()
+   Function:    cleans the CATH CLF file
+   STDIN:       CATH CLF file
+   STDOUT:      cleaned up CATH CLF file
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{cath\_clean\_cnf\_contraction()\label{pibase::CATH_cath_clean_cnf_contraction_}\index{pibase::CATH!cath\ clean\ cnf\ contraction()}}
+\begin{verbatim}
+   Title:       cath_clean_cnf_contraction()
+   Function:    fixes the concatenation problem with the CATH CNF file
+   STDIN:       CATH CNF file
+   STDOUT:      concat-fixed CATH CNF file
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{cath\_clean\_cnf\_contraction()\label{pibase::CATH_cath_clean_cnf_contraction_}\index{pibase::CATH!cath\ clean\ cnf\ contraction()}}
+\begin{verbatim}
+   Title:       cath_clean_cnf()
+   Function:    fixes the concatenation problem with the CATH CNF file
+   STDIN:       CATH CNF file (preferably concat-fixed)
+   STDOUT:      cleaned CATH CNF file
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pibase\_import\_cath\_domains()\label{pibase::CATH_pibase_import_cath_domains_}\index{pibase::CATH!pibase\ import\ cath\ domains()}}
+\begin{verbatim}
+   Title:       pibase_import_cath_domains()
+   Function:    reformats raw CATH tables imported into pibase as generic
+                  subsets tables
+   In tables:   1. cath_domain_list
+                2. cath_domall_boundaries
+                3. cath_names
+\end{verbatim}
+\begin{verbatim}
+   Out tables:  1. subsets
+                2. subsets_class
+                3. subsets_details
+\end{verbatim}
+\begin{verbatim}
+   Args:        nothing
+   Returns:     nothing
+\end{verbatim}
+\clearpage
+\section{pibase::PDB\label{pibase::PDB}\index{pibase::PDB}}
+
+
+Module to handle PDB functions
+
+\subsection*{DESCRIPTION\label{pibase::PDB_DESCRIPTION}\index{pibase::PDB!DESCRIPTION}}
+
+
+Handles general PDB functions: altloc check, filter
+
+\subsection*{FILES\label{pibase::PDB_FILES}\index{pibase::PDB!FILES}}
+
+
+Operates on PDB file
+
+\subsection*{AUTHOR\label{pibase::PDB_AUTHOR}\index{pibase::PDB!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::PDB_SUBROUTINES}\index{pibase::PDB!SUBROUTINES}}
+\subsubsection*{altloc\_check()\label{pibase::PDB_altloc_check_}\index{pibase::PDB!altloc\ check()}}
+\begin{verbatim}
+   Title:       altloc_check()
+   Function:    checks whether a PDB file for atoms with multiple locations
+   Args:        $_ = pdb filename
+   Return:      1 if containts multiple-occurrence atoms, 0 if not
+\end{verbatim}
+\subsubsection*{altloc\_filter()\label{pibase::PDB_altloc_filter_}\index{pibase::PDB!altloc\ filter()}}
+\begin{verbatim}
+   Title:       altloc_filter()
+   Function:    calls the altloc_filter binary so that each atom occurs once
+      Leaves the highest occupied (if occupancy defined) or the first location
+      listed in the file.
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0] = source pdb_filename
+                $_[1] = output pdb_filename
+\end{verbatim}
+\begin{verbatim}
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pdb\_copy\_entry\_type()\label{pibase::PDB_pdb_copy_entry_type_}\index{pibase::PDB!pdb\ copy\ entry\ type()}}
+\begin{verbatim}
+   Title:       pdb_copy_entry_type()
+   Function:    copies PDB pdb_entry_type for pibase import
+   STDIN:       PDB pdb_entry_type
+   STDOUT:      pdb_entry_type.pibase_id pibase table
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pdb\_clean\_entries\_idx()\label{pibase::PDB_pdb_clean_entries_idx_}\index{pibase::PDB!pdb\ clean\ entries\ idx()}}
+\begin{verbatim}
+   Title:       pdb_clean_entries_idx()
+   Function:    reformats the PDB entries.idx for pibase import
+   STDIN:       PDB entries.idx
+   STDOUT:      pibase.pdb_entries table
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pdb\_clean\_obsolete\_dat()\label{pibase::PDB_pdb_clean_obsolete_dat_}\index{pibase::PDB!pdb\ clean\ obsolete\ dat()}}
+\begin{verbatim}
+   Title:       pdb_clean_obsolete_dat()
+   Function:    reformats the PDB obsolete.dat for pibase import
+   STDIN:       PDB obsolete.dat
+   STDOUT:      pibase.pdb_obsolete table
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pdb\_clean\_release\_date()\label{pibase::PDB_pdb_clean_release_date_}\index{pibase::PDB!pdb\ clean\ release\ date()}}
+\begin{verbatim}
+   Title:       pdb_clean_release_date()
+   Function:    reformats the PDB release file for pibase import
+   STDIN:       NOTDONE PDB obsolete.dat
+   STDOUT:      pibase.pdb_release table
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{pdb\_clean\_symop()\label{pibase::PDB_pdb_clean_symop_}\index{pibase::PDB!pdb\ clean\ symop()}}
+\begin{verbatim}
+   Title:       pdb_clean_symop()
+   Function:    Extracts and displays symmetry operators:
+   STDIN:       PDB symop lines
+   STDOUT:      pibase.pdb_release table
+   Returns:     nothing
+\end{verbatim}
+\subsubsection*{get\_pdb\_filepath()\label{pibase::PDB_get_pdb_filepath_}\index{pibase::PDB!get\ pdb\ filepath()}}
+\begin{verbatim}
+   Title:       get_pdb_filepath()
+   Function:    returns file path to a PDB entry
+   Args:        ->{pdb_id} = pdb identifier
+                [->{pibase_specs} = $pibase_specs] - optional
+   Returns:     returns PDB entry filepath
+\end{verbatim}
+\subsubsection*{nmr\_model1\_extractor\label{pibase::PDB_nmr_model1_extractor}\index{pibase::PDB!nmr\ model1\ extractor}}
+\begin{verbatim}
+   Title:       nmr_model1_extractor()
+   Function:    extracts first model from NMR PDB files and moves to 
+                $specs->{pdbnmr_dir}
+   Args:        none
+   Returns:     nothing
+   Tables in:   pibase.pdb_entries
+   Files in:    foreach PDB NMR entry: <$specs->{pdb_dir}>/pdb<$pdb_id>.ent
+   Files out:   foreach PDB NMR entry: <$specs->{pdbnmr_dir}>/<$pdb_id>_1.ent
+   NOTE: expects PDBs to be stored as pdb<$pdb_id>.ent in one raw directory
+\end{verbatim}
+\clearpage
+\section{pibase::PDB::chains\label{pibase::PDB::chains}\index{pibase::PDB::chains}}
+
+
+Perl module to extract chain listing from a pdb file.
+
+\subsection*{DESCRIPTION\label{pibase::PDB::chains_DESCRIPTION}\index{pibase::PDB::chains!DESCRIPTION}}
+
+
+Perl module to parse a pdb file and lists the chains.
+
+\subsection*{AUTHOR\label{pibase::PDB::chains_AUTHOR}\index{pibase::PDB::chains!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::PDB::chains_SUBROUTINES}\index{pibase::PDB::chains!SUBROUTINES}}
+\subsubsection*{SUB chain\_info()\label{pibase::PDB::chains_SUB_chain_info_}\index{pibase::PDB::chains!SUB chain\ info()}}
+\begin{verbatim}
+   Title: chain_info()
+   Function: calculates chain listing for a pdb file
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0] = pdb_file
+                $_[1] = outfile
+                $_[2] = bdp_id identifier [optional]
+   Returns:     nothing
+\end{verbatim}
+\begin{verbatim}
+   Input file:  PDB file ($_[0]) 
+      http://www.rcsb.org/pdb/docs/format/pdbguide2.2/guide2.2_frame.html
+      http://msdlocal.ebi.ac.uk/docs/pdb_format/y_index.html
+\end{verbatim}
+\begin{verbatim}
+   Output file: Chain listing ($_[1])
+      1 pdb identifier (e.g. bdp_id)
+      2 Chain number
+      3 Chain id
+      4 Chain type - p (protein) or n (nucleic acid)
+      5 null
+      6 null
+      7 start residue number
+      8 start residue number (integer only)
+      9 end residue number
+     10 end residue number (integer only)
+     11 number of residues
+     12 number of atoms
+     13 number of het atoms
+     14 chain sequence
+\end{verbatim}
+\clearpage
+\section{pibase::PDB::residues\label{pibase::PDB::residues}\index{pibase::PDB::residues}}
+
+
+Perl package to extract residue listing from a PDB file.
+
+\subsection*{DESCRIPTION\label{pibase::PDB::residues_DESCRIPTION}\index{pibase::PDB::residues!DESCRIPTION}}
+
+
+Parses a pdb file and lists the residues.
+
+\subsection*{AUTHOR\label{pibase::PDB::residues_AUTHOR}\index{pibase::PDB::residues!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::PDB::sec\_strx\label{pibase::PDB::sec_strx}\index{pibase::PDB::sec\ strx}}
+
+
+Obtain secondary structure assignments from dsspcmbi.
+
+\subsection*{DESCRIPTION\label{pibase::PDB::sec_strx_DESCRIPTION}\index{pibase::PDB::sec strx!DESCRIPTION}}
+
+
+Interface to DSSP to calculate secondary structure for PIBASE structures.
+
+\subsection*{AUTHOR\label{pibase::PDB::sec_strx_AUTHOR}\index{pibase::PDB::sec strx!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::PDB::sec_strx_SUBROUTINES}\index{pibase::PDB::sec strx!SUBROUTINES}}
+\subsubsection*{SUB get\_sec\_strx()\label{pibase::PDB::sec_strx_SUB_get_sec_strx_}\index{pibase::PDB::sec strx!SUB get\ sec\ strx()}}
+\begin{verbatim}
+   Function: calls DSSP to get a PDB file's residue secondary structure assignment
+   Args: $_[0] - pdb file
+         $_[1] - output file
+         $_[2] - bdp identifier - e.g. bdp_id [optional]
+\end{verbatim}
+\begin{verbatim}
+   Returns:     nothing
+   Output file:
+      1 pdb identifier (e.g. bdp_id)
+      2 Chain number
+      3 Chain id
+      4 residue number
+      5 residue number (integer only)
+      6 residue name
+      7 Polymer type - p (protein) or n (nucleic acid)
+\end{verbatim}
+\subsubsection*{SUB parse\_dssp()\label{pibase::PDB::sec_strx_SUB_parse_dssp_}\index{pibase::PDB::sec strx!SUB parse\ dssp()}}
+\begin{verbatim}
+   Title:    parse_dssp()
+   Function: parses DSSP output and returns a hash of assignment data
+   Args: $_[0] - DSSP output file
+         $_[1] - output file
+         $_[2] - bdp identifier - e.g. bdp_id [optional]
+\end{verbatim}
+\begin{verbatim}
+   Returns:     $->{detail}->{resno."\n".chain_id} = H|G|I|B|E|T|S|' '
+                $->{basic}->{resno."\n".chain_id} = H|B|T|' '
+                $->{ordering} = [resno1."\n".chain_id1, resno2."\n".chain_id2...]
+                $->{ssnum}->{resno."\n".chain_id} = secondary structure element #
+                   counts contiguous stretches of same particular detailed sec
+                   strx assignment)
+                $->{ssnum_basic}->{resno."\n".chain_id} = secondary structure
+                   element number - counts contiguous stretches of basic secondary
+                   structurea ssignment
+\end{verbatim}
+\clearpage
+\section{pibase::subsets\label{pibase::subsets}\index{pibase::subsets}}
+
+
+Perl module that deals with PDB subsets
+
+\subsection*{DESCRIPTION\label{pibase::subsets_DESCRIPTION}\index{pibase::subsets!DESCRIPTION}}
+
+
+Perl module to handle subset operations on PDB files
+
+\subsection*{AUTHOR\label{pibase::subsets_AUTHOR}\index{pibase::subsets!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::subsets_SUBROUTINES}\index{pibase::subsets!SUBROUTINES}}
+\subsubsection*{SUB subset\_extract()\label{pibase::subsets_SUB_subset_extract_}\index{pibase::subsets!SUB subset\ extract()}}
+\begin{verbatim}
+   Function: extracts specified residues/chains from PDB file
+   Args:        $_[0] = PDB file name
+                $_[1] = output PDB file name
+                $_[2] = chain identifier
+                $_[3] = start residue number
+                $_[4] = end residue number
+\end{verbatim}
+\begin{verbatim}
+   Returns:     $_->[i] arrayref of errors
+\end{verbatim}
+\begin{verbatim}
+   Files IN:    PDB file ($_[0])
+   Files OUT:   subset PDB file ($_[1])
+\end{verbatim}
+\clearpage
+\section{pibase::PISA\label{pibase::PISA}\index{pibase::PISA}}
+
+
+Perl module of routines that operate on PISA (PDBe's Protein
+Interfaces, Surfaces, and Assemblies) files.
+
+\subsection*{DESCRIPTION\label{pibase::PISA_DESCRIPTION}\index{pibase::PISA!DESCRIPTION}}
+
+
+The PISA.pm module contains routines to process and format PISA release files for PIBASE import.
+
+\subsection*{AUTHOR\label{pibase::PISA_AUTHOR}\index{pibase::PISA!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::PISA_SUBROUTINES}\index{pibase::PISA!SUBROUTINES}}
+\subsubsection*{pisa\_clean\_index()\label{pibase::PISA_pisa_clean_index_}\index{pibase::PISA!pisa\ clean\ index()}}
+\begin{verbatim}
+   Title:       pisa_clean_index()
+   Function:    cleans PISA index.txt file for pibase import
+   Args:        none
+   STDIN:       INDEX
+   STDOUT:      pibase.pisa_index table
+\end{verbatim}
+\subsubsection*{get\_pisa\_filepath()\label{pibase::PISA_get_pisa_filepath_}\index{pibase::PISA!get\ pisa\ filepath()}}
+\begin{verbatim}
+   Title:       get_pisa_filepath()
+   Function:    returns file path to a PISA entry
+   Args:        ->{pisa_id} = PISA identifier
+                [->{pibase_specs} = $pibase_specs] - optional
+   Returns:     returns PISA entry filepath
+\end{verbatim}
+\clearpage
+\section{pibase::PQS\label{pibase::PQS}\index{pibase::PQS}}
+
+
+Perl module of routines that operate on PQS (EBI's Probable
+Quaternary Structure server) release files.
+
+\subsection*{DESCRIPTION\label{pibase::PQS_DESCRIPTION}\index{pibase::PQS!DESCRIPTION}}
+
+
+The PQS.pm module contains routines to process and format PQS release files for PIBASE import.
+
+\subsection*{AUTHOR\label{pibase::PQS_AUTHOR}\index{pibase::PQS!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::PQS_SUBROUTINES}\index{pibase::PQS!SUBROUTINES}}
+\subsubsection*{pqs\_clean\_asalist()\label{pibase::PQS_pqs_clean_asalist_}\index{pibase::PQS!pqs\ clean\ asalist()}}
+\begin{verbatim}
+   Title:       pqs_clean_asalist()
+   Function:    cleans PQS ASALIST file for pibase import
+   Args:        none
+   STDIN:       ASALIST
+   STDOUT:      pibase.pqs_asalist table
+\end{verbatim}
+\subsubsection*{pqs\_clean\_biolist()\label{pibase::PQS_pqs_clean_biolist_}\index{pibase::PQS!pqs\ clean\ biolist()}}
+\begin{verbatim}
+   Title:       pqs_clean_biolist()
+   Function:    cleans PQS BIOLIST file for pibase import
+   Args:        none
+   STDIN:       BIOLIST (preferably pqs_clean_biolist_contract() fixed)
+   STDOUT:      pibase.pqs_biolist table
+\end{verbatim}
+\subsubsection*{pqs\_clean\_biolist\_contraction()\label{pibase::PQS_pqs_clean_biolist_contraction_}\index{pibase::PQS!pqs\ clean\ biolist\ contraction()}}
+\begin{verbatim}
+   Title:       pqs_clean_biolist_contraction()
+   Function:    fixes contraction errors in PQS BIOLIST
+   Args:        none
+   STDIN:       BIOLIST
+   STDOUT:      contraction fixed BIOLIST
+\end{verbatim}
+\subsubsection*{pqs\_clean\_list()\label{pibase::PQS_pqs_clean_list_}\index{pibase::PQS!pqs\ clean\ list()}}
+\begin{verbatim}
+   Title:       pqs_clean_list()
+   Function:    reformats PQS LIST for pibase import
+   Args:        none
+   STDIN:       PQS LIST
+   STDOUT:      pibase.pqs_list table
+\end{verbatim}
+\subsubsection*{pqs\_clean\_ranking()\label{pibase::PQS_pqs_clean_ranking_}\index{pibase::PQS!pqs\ clean\ ranking()}}
+\begin{verbatim}
+   Title:       pqs_clean_ranking()
+   Function:    reformats PQS RANKING for pibase import
+   Args:        none
+   STDIN:       PQS RANKING
+   STDOUT:      pibase.pqs_ranking table
+\end{verbatim}
+\subsubsection*{get\_pqs\_filepath()\label{pibase::PQS_get_pqs_filepath_}\index{pibase::PQS!get\ pqs\ filepath()}}
+\begin{verbatim}
+   Title:       get_pqs_filepath()
+   Function:    returns file path to a PQS entry
+   Args:        ->{pqs_id} = PQS identifier
+                [->{pibase_specs} = $pibase_specs] - optional
+   Returns:     returns PQS entry filepath
+\end{verbatim}
+\clearpage
+\section{pibase::SCOP\label{pibase::SCOP}\index{pibase::SCOP}}
+
+
+Package that handles SCOP release files and pibase.
+
+\subsection*{DESCRIPTION\label{pibase::SCOP_DESCRIPTION}\index{pibase::SCOP!DESCRIPTION}}
+
+
+Processes SCOP release files and
+
+\subsection*{AUTHOR\label{pibase::SCOP_AUTHOR}\index{pibase::SCOP!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::SCOP_SUBROUTINES}\index{pibase::SCOP!SUBROUTINES}}
+\subsubsection*{scop\_clean\_cla()\label{pibase::SCOP_scop_clean_cla_}\index{pibase::SCOP!scop\ clean\ cla()}}
+\begin{verbatim}
+   Title:       scop_clean_cla()
+   Function:    Processes the SCOP .cla file for pibase import
+   STDIN:       SCOP CLA file
+   STDOUT:      pibase.scop_cla table
+   Args:        none
+   Returns:     none
+\end{verbatim}
+\subsubsection*{scop\_clean\_des()\label{pibase::SCOP_scop_clean_des_}\index{pibase::SCOP!scop\ clean\ des()}}
+\begin{verbatim}
+   Title:       scop_clean_des()
+   Function:    Processes the SCOP .des file for pibase import
+   STDIN:       SCOP DES file
+   STDOUT:      pibase.scop_des table
+   Args:        none
+   Returns:     none
+\end{verbatim}
+\subsubsection*{scop\_clean\_hie()\label{pibase::SCOP_scop_clean_hie_}\index{pibase::SCOP!scop\ clean\ hie()}}
+\begin{verbatim}
+   Title:       scop_clean_hie()
+   Function:    Processes the SCOP .hie file for pibase import
+   STDIN:       SCOP HIE file
+   STDOUT:      pibase.scop_hie table
+   Args:        $_->{in_fn} = input file
+                $_->{out_fn} = output file
+                $_->{header_fl} = flag to generate header in output (default 1)
+   Returns:     none
+\end{verbatim}
+\subsubsection*{pibase\_import\_scop\_domains()\label{pibase::SCOP_pibase_import_scop_domains_}\index{pibase::SCOP!pibase\ import\ scop\ domains()}}
+\begin{verbatim}
+   Title:       pibase_import_scop_domains()
+   Function:    Processes the SCOP .hie file for pibase import
+   Tables in:   pibase.scop_cla
+                pibase.scop_des
+\end{verbatim}
+\begin{verbatim}
+   Tables out:  pibase.subsets
+                pibase.subsets_class
+                pibase.subsets_details
+   Args:        none
+   Returns:     none
+\end{verbatim}
+\clearpage
+\section{pibase::SGE\label{pibase::SGE}\index{pibase::SGE}}
+
+
+Perl module for SGE cluster interaction
+
+\subsection*{DESCRIPTION\label{pibase::SGE_DESCRIPTION}\index{pibase::SGE!DESCRIPTION}}
+
+
+Perl module with routines to interact with an SGE cluster,
+adapted from routines in modtie.pm
+
+\subsection*{AUTHOR\label{pibase::SGE_AUTHOR}\index{pibase::SGE!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::SUPFAM.pm\label{pibase::SUPFAM_pm}\index{pibase::SUPFAM.pm}}
+
+
+
+
+\subsection*{DESCRIPTION\label{pibase::SUPFAM_pm_DESCRIPTION}\index{pibase::SUPFAM pm!DESCRIPTION}}
+
+
+This module contains routines to interface with SUPFAM annotation files.
+Goal is to map SCOP residue numbers onto target sequences using
+SUPFAM alignments and ASTRAL mapping.
+
+\subsection*{VERSION\label{pibase::SUPFAM_pm_VERSION}\index{pibase::SUPFAM pm!VERSION}}
+
+
+fpd091013\_0708
+
+\subsection*{AUTHOR\label{pibase::SUPFAM_pm_AUTHOR}\index{pibase::SUPFAM pm!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::SUPFAM_pm_SUBROUTINES}\index{pibase::SUPFAM pm!SUBROUTINES}}
+\subsubsection*{set\_supfam\_specs\label{pibase::SUPFAM_pm_set_supfam_specs}\index{pibase::SUPFAM pm!set\ supfam\ specs}}
+\begin{verbatim}
+   Title:       set_supfam_specs()
+   Function:    Sets configuration parameters
+   Args:        None
+   Returns:     $_->{option} = value; hash of parameters
+\end{verbatim}
+\subsubsection*{readin\_substitution\_matrix\label{pibase::SUPFAM_pm_readin_substitution_matrix}\index{pibase::SUPFAM pm!readin\ substitution\ matrix}}
+\begin{verbatim}
+   Title:       readin_substitution_matrix()
+   Function:    Parses a substitution matrix in matblas format
+   Args:        ->{matrix_fn} = filename of substitution matrix
+                ->{string} = string containing contents of matrix file
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{raw}->{aa1}->{aa2} = substitution matrix score for aa1,aa2
+                ->{nl}->{aa1}->{aa2} = normalized aa similarity score
+                  (see karling_normalize_matrix() for normalization scheme)
+\end{verbatim}
+\subsubsection*{karlin\_normalize\_matrix\label{pibase::SUPFAM_pm_karlin_normalize_matrix}\index{pibase::SUPFAM pm!karlin\ normalize\ matrix}}
+\begin{verbatim}
+   Title:       karlin_normalize_matrix()
+   Function:    Normalizes a substitution matrix per Karlin and Brocchieri,
+                  J Bacteriol 1996; and rescaled to range from 0-1:
+\end{verbatim}
+\begin{verbatim}
+               0.5 * (1 + ( mat(i,j) / sqrt(|mat(i,i) * mat(j,j)|)))
+\end{verbatim}
+\begin{verbatim}
+   Args:        ->{matrix}->{aa1}->{aa2} = raw substitution matrix
+   Returns:     ->{aa1}->{aa2} = normalized similarity score
+\end{verbatim}
+\subsubsection*{run\_pilig\_supfam\_annotate()\label{pibase::SUPFAM_pm_run_pilig_supfam_annotate_}\index{pibase::SUPFAM pm!run\ pilig\ supfam\ annotate()}}
+\begin{verbatim}
+   Title:       run_pilig_supfam_annotate()
+   Function:    Maps PIBASE/LIGBASE binding sites onto target sequences
+                  annotated with SUPERFAMILY domain assignments
+\end{verbatim}
+\begin{verbatim}
+   Args:        ->{ARGV} = ARGV array reference; parsed to provide:
+                ->{ass_fn} = name of SUPERFAMILY domain assignment file
+                ->{out_fn} = name of output file
+                ->{err_fn} = name of error file
+                ->{matrix_fn} = optional substitution matrix, default BLOSUM62
+                ->{cluster_fl} = run on an SGE cluster (options in SGE.pm)
+\end{verbatim}
+\begin{verbatim}
+   Returns:     NOTHING
+   Displays:     1. seq_id
+                 2. res_range
+                 3. classtype
+                 4. class
+                 5. bs_type
+                 6. bs_template
+                 7. partner_descr
+                 8. residues
+                 9. bs_percseqident
+                10. bs_percseqsim
+                11. bs_numident
+                12. bs_numgap
+                13. bs_tmpl_numres
+                14. bs_fracaln
+                15. wholedom_numident
+                16. wholedom_aln_length
+                17. wholedom_percseqident
+                18. wholedom_percseqsim
+\end{verbatim}
+\subsubsection*{merge\_SUPFAM\_ASTRAL\_alignments\label{pibase::SUPFAM_pm_merge_SUPFAM_ASTRAL_alignments}\index{pibase::SUPFAM pm!merge\ SUPFAM\ ASTRAL\ alignments}}
+\begin{verbatim}
+   Title:       merge_SUPFAM_ASTRAL_alignments()
+   Function:    Merges SUPERFAMILY alignment string with ASTRAL alignment to
+                 get SUPERFAMILY annotated target sequence in the ASTRAL
+                 alignment frame (where it can receive binding site annotations)
+\end{verbatim}
+\begin{verbatim}
+   Args:        ->{superfam_aln} = SUPERFAMILY alignment string
+                ->{astral_aln} = ASTRAL alignment string
+                ->{target} = target sequence name
+                ->{common} = template sequence name present in both alignments
+\end{verbatim}
+\begin{verbatim}
+   Returns:     ->{resno2alnpos}->{target resno} = alignment position
+                ->{alnpos2resno}->{alignment position} = target resno
+\end{verbatim}
+\subsubsection*{readin\_scop\_cla\label{pibase::SUPFAM_pm_readin_scop_cla}\index{pibase::SUPFAM pm!readin\ scop\ cla}}
+\begin{verbatim}
+   Title:       readin_scop_cla()
+   Function:    Reads in SCOP cla file (parsing logic from pibase::SCOP)
+   Args:        ->{fn} = SCOP cla filename
+   Returns:     ->{px2scopid}->{px_id} = scopid
+                ->{scopid2class}->{scopid} = class
+                ->{faid2sfid}->{fa_id} = sf_id0
+\end{verbatim}
+\subsubsection*{get\_SUPFAM\_selfhit\label{pibase::SUPFAM_pm_get_SUPFAM_selfhit}\index{pibase::SUPFAM pm!get\ SUPFAM\ selfhit}}
+\begin{verbatim}
+   Title:       get_SUPFAM_selfhit()
+   Function:    Retrieves alignment string from SUPFAM self-hit files for
+                  a particular SCOP template domain
+\end{verbatim}
+\begin{verbatim}
+   Args:        ->{supfam_specs} = configuration parameters
+                ->{px_id} = SCOP px id
+                ->{model_id} = SUPERFAMILY model id
+\end{verbatim}
+\begin{verbatim}
+   Returns:     self-hit alignment string
+\end{verbatim}
+\subsubsection*{summarize\_results()\label{pibase::SUPFAM_pm_summarize_results_}\index{pibase::SUPFAM pm!summarize\ results()}}
+\begin{verbatim}
+   Title:       summarize_results()
+   Function:    Parses run_pilig_supfam_annotate() output and reports
+                  summary of annotations.
+\end{verbatim}
+\begin{verbatim}
+   Args:        ->{results_fn} = run_pilig_supfam_annotate() output file
+   Returns:     nothing
+   Displays:    table describing numbers of proteins,domains,families,residues
+                 with each kind of annotation
+\end{verbatim}
+\clearpage
+\section{pibase::aux\label{pibase::aux}\index{pibase::aux}}
+
+
+Perl interface to auxiliary pibase routines
+
+\subsection*{DESCRIPTION\label{pibase::aux_DESCRIPTION}\index{pibase::aux!DESCRIPTION}}
+
+
+Perl package that has miscellaneous pibase routines for non-core functions
+
+\subsection*{AUTHOR\label{pibase::aux_AUTHOR}\index{pibase::aux!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::benchmark\label{pibase::benchmark}\index{pibase::benchmark}}
+
+
+Perl package for benchmarking pibase
+
+\subsection*{DESCRIPTION\label{pibase::benchmark_DESCRIPTION}\index{pibase::benchmark!DESCRIPTION}}
+
+
+Contains pibase table structure definitions
+
+\subsection*{AUTHOR\label{pibase::benchmark_AUTHOR}\index{pibase::benchmark!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::benchmark_SUBROUTINES}\index{pibase::benchmark!SUBROUTINES}}
+\subsubsection*{memusage()\label{pibase::benchmark_memusage_}\index{pibase::benchmark!memusage()}}
+\begin{verbatim}
+   Title:       memusage()
+   Function:    Returns the VmSize of the process
+      works on linux /proc/$$/status
+\end{verbatim}
+\clearpage
+\section{pibase::build\label{pibase::build}\index{pibase::build}}
+
+
+Perl module to build the pibase database
+
+\subsection*{DESCRIPTION\label{pibase::build_DESCRIPTION}\index{pibase::build!DESCRIPTION}}
+
+
+Perl module that executes the PIBASE build protocol.
+
+\subsection*{AUTHOR\label{pibase::build_AUTHOR}\index{pibase::build!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::calc::interfaces\label{pibase::calc::interfaces}\index{pibase::calc::interfaces}}
+
+
+Perl module to compute protein interfaces.
+
+\subsection*{DESCRIPTION\label{pibase::calc::interfaces_DESCRIPTION}\index{pibase::calc::interfaces!DESCRIPTION}}
+
+
+Perl module that contains routines for computing structural interfaces
+
+\subsection*{AUTHOR\label{pibase::calc::interfaces_AUTHOR}\index{pibase::calc::interfaces!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::calc::interfaces_SUBROUTINES}\index{pibase::calc::interfaces!SUBROUTINES}}
+\subsubsection*{interface\_detect\_calc()\label{pibase::calc::interfaces_interface_detect_calc_}\index{pibase::calc::interfaces!interface\ detect\ calc()}}
+\begin{verbatim}
+   Title:       interface_detect_calc()
+   Function:    Detect interfaces in bdp files.
+   Args:        None
+   Returns:     Nothing
+   STDIN:       bdp_id."\t".bdp_path
+   Files in:    PDB files (as specified in STDIN column 2 (bdp_path))
+   Files out:
+   o intersubset_contacts.<hostname>.<timestamp>.<XXXXXX>.<pibase db name>
+   o patch_residues_tables.meta.<hostname>.<timestamp>.<XXXXXX>.<pibase db name>
+   o interface_contacts_tables.meta.<hostname>.<timestamp>.<XXXXXX>.
+      <pibase db name>
+   o interface_contacts_special_tables.meta.<hostname>.<timestamp>.<XXXXXX>.
+      <pibase db name>
+\end{verbatim}
+\begin{verbatim}
+   o foreach bdp_id:
+      o patch_residues_<bdp_id>.<XXXXXX>.<pibase db name>
+      o interface_contacts_<bdp_id>.<XXXXXX>.<pibase db name>
+      o interface_contacts_special_<bdp_id>.<XXXXXX>.<pibase db name>
+\end{verbatim}
+\subsubsection*{\_interface\_detect\_calc\_\_calc\_res\_pairs().\label{pibase::calc::interfaces__interface_detect_calc_calc_res_pairs_}\index{pibase::calc::interfaces!\ interface\ detect\ calc\ \ calc\ res\ pairs().}}
+\begin{verbatim}
+   Title:       _interface_detect_calc__calc_res_pairs()
+   Function:    Calculates residue contacts in a given pdb file.
+   Args:        $_->{radius} - upper distance limit on inter-atomic contacts calculation [default=6.6 Ang]
+                $_->{compress} - compression flag
+                $_->{bdp_path} - bdp file path
+\end{verbatim}
+\begin{verbatim}
+   Return:      $_->{contacts_fn} - kdcontacts output file
+                $_->{fields} - kdcontacts file field names
+                $_->{field2no}->{field} = i - hash mapping kdcontacts field names to field number
+\end{verbatim}
+\begin{verbatim}
+   Files IN:    PDB file ($_->{bdp_path})
+   Files OUT:   kdcontacts output file ($_->{contacts_fn})
+\end{verbatim}
+\subsubsection*{cluster\_scop\_interfaces()\label{pibase::calc::interfaces_cluster_scop_interfaces_}\index{pibase::calc::interfaces!cluster\ scop\ interfaces()}}
+\begin{verbatim}
+   Title:       cluster_scop_interfacesj()
+   Function:    Clusters SCOP-SCOP interfaces using ASTRAL ASTEROIDS alignments.
+                 and imports to PIBASE if specified
+   Args:        ->{pibase_specs} = optional
+                ->{import_fl} = 1 if to be imported into PIBASE
+   Returns:     Prints out cluster membership to
+                 $pibase_specs->{buildfiles}->{scop_interface_clusters}) ;
+\end{verbatim}
+\subsubsection*{\_cluster\_interfaces\_compare\_residue\_sets()\label{pibase::calc::interfaces__cluster_interfaces_compare_residue_sets_}\index{pibase::calc::interfaces!\ cluster\ interfaces\ compare\ residue\ sets()}}
+\begin{verbatim}
+   Title:       _cluster_interfaces_compare_residue_sets()
+   Function:    Venn comparison of interface residue sets 
+   Args:        ->{aln} = alignment data
+                ->{sid1} = domain 1 identifier
+                ->{sid2} = domain 2 identifier
+                ->{res1}->{ resno1 => 1, resno2 => 1} - residues in set 1
+                ->{res2}->{ resno1 => 1, resno2 => 1} - residues in set 2
+   Returns:     union / (union + diff) of the two sets
+\end{verbatim}
+\subsubsection*{\_cluster\_interfaces\_load\_interface\_contacts()\label{pibase::calc::interfaces__cluster_interfaces_load_interface_contacts_}\index{pibase::calc::interfaces!\ cluster\ interfaces\ load\ interface\ contacts()}}
+\begin{verbatim}
+   Title:       _cluster_interfaces_load_interface_contacts()
+   Function:    Venn comparison of interface residue sets 
+   Args:        ->{sid1} = domain 1 identifier
+                ->{sid2} = domain 2 identifier
+   Returns:     ->{intres}->{sid1}->{resno1."\n".chain1}= domain 1 res in interface
+                ->{intres}->{sid2}->{resno2."\n".chain2}= domain 2 res in interface
+                ->{contacts}->{resno1."\n".chain1."\n".resno2."\n".chain2} -
+                   inter-domain contact
+\end{verbatim}
+\subsubsection*{\_cluster\_interfaces\_compare\_contact\_sets()\label{pibase::calc::interfaces__cluster_interfaces_compare_contact_sets_}\index{pibase::calc::interfaces!\ cluster\ interfaces\ compare\ contact\ sets()}}
+\begin{verbatim}
+   Title:       _cluster_interfaces_compare_contact_ses()
+   Function:    Venn comparison of interface contact sets 
+   Args:        ->{aln1} = alignment data for domain type 1
+                ->{aln2} = alignment data for domain type 2
+                ->{sid1} = domain 1 identifier
+                ->{sid2} = domain 2 identifier
+                ->{cont1} = contacts for interface 1
+                ->{cont2} = contacts for interface 2
+                ->{revfl}->[i] = reversal flag;
+                   if 1 switch sid1/2 in ith interface
+\end{verbatim}
+\begin{verbatim}
+   Returns:     union / (union + diff) of contacts
+\end{verbatim}
+\subsubsection*{\_cluster\_interface\_pibase\_preload()\label{pibase::calc::interfaces__cluster_interface_pibase_preload_}\index{pibase::calc::interfaces!\ cluster\ interface\ pibase\ preload()}}
+\begin{verbatim}
+   Title:       _cluster_interface_pibase_preload()
+   Function:    Preloads PIBASE data necessary for SCOP interface clustering
+   Args:        ->{astral} = astral data
+                ->{aln2} = alignment data for domain type 2
+                ->{sid1} = domain 1 identifier
+                ->{sid2} = domain 2 identifier
+                ->{cont1} = contacts for interface 1
+                ->{cont2} = contacts for interface 2
+                ->{revfl}->[i] = reversal flag; if 1 switch sid1/2 in ith interface
+\end{verbatim}
+\begin{verbatim}
+   Returns:     Huge hash of PIBASE data, see code for field explanations
+      bdp2contactsfn => $bdp2contactsfn,
+      bdp2pdb => $bdp2pdb,
+      pdb2bdp => $pdb2bdp,
+      bdp_id => $bdp_id,
+      sid1 => $sid1,
+      sid2 => $sid2,
+      class1 => $class1,
+      class2 => $class2,
+      osid1 => $osid1,
+      osid2 => $osid2,
+      revfl => $revfl,
+      fampairs => $fampairs,
+      fampairs_single => $fampairs_single,
+      fampairs_single_osid => $fampairs_single_osid,
+      pdbchains => $pdbchains,
+      chain_2_pdbchain => $chain_2_pdbchain,
+      chain_2_start => $chain_2_start,
+      chain_2_end => $chain_2_end,
+      chain_2_startser => $chain_2_startser,
+      chain_2_endser => $chain_2_endser
+\end{verbatim}
+\clearpage
+\section{pibase::create\_raw\_table\_specs\label{pibase::create_raw_table_specs}\index{pibase::create\ raw\ table\ specs}}
+
+
+Module to create perl code with PIBASE db strx
+
+\subsection*{DESCRIPTION\label{pibase::create_raw_table_specs_DESCRIPTION}\index{pibase::create raw table specs!DESCRIPTION}}
+
+
+Parses (My)SQL CREATE TABLE statements and displays perl code that defines table structure
+
+\subsection*{AUTHOR\label{pibase::create_raw_table_specs_AUTHOR}\index{pibase::create raw table specs!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{VERSION\label{pibase::create_raw_table_specs_VERSION}\index{pibase::create raw table specs!VERSION}}
+
+
+' ;
+
+\begin{verbatim}
+   print "fpd".pibase::timestamp()."\n\n" ;
+\end{verbatim}
+
+
+print '=head1 DESCRIPTION
+
+
+
+The raw\_table\_specs module contains a hard-coded description of the PIBASE
+table structures. This file is automatically generated by the
+pibase::create\_raw\_table\_specs
+
+\subsection*{AUTHOR\label{pibase::create_raw_table_specs_AUTHOR}\index{pibase::create raw table specs!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::create_raw_table_specs_SUBROUTINES}\index{pibase::create raw table specs!SUBROUTINES}}
+\subsubsection*{full\_table\_specs()\label{pibase::create_raw_table_specs_full_table_specs_}\index{pibase::create raw table specs!full\ table\ specs()}}
+\begin{verbatim}
+   Title:       full_table_specs()
+   Args:        none
+   Returns:     $->{table_name}->{prikey} = primary key field
+                $->{table_name}->{field_name}->[i] = name of ith field
+                $->{table_name}->{field_spec}->[i] = type of ith field
+\end{verbatim}
+\clearpage
+\section{pibase::data::access\label{pibase::data::access}\index{pibase::data::access}}
+
+
+Perl module of pibase data access routines
+
+\subsection*{DESCRIPTION\label{pibase::data::access_DESCRIPTION}\index{pibase::data::access!DESCRIPTION}}
+
+
+Perl package that provides pibase data access routines
+
+\subsection*{AUTHOR\label{pibase::data::access_AUTHOR}\index{pibase::data::access!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::data::calc\label{pibase::data::calc}\index{pibase::data::calc}}
+
+
+Perl module for pibase data calculation routines
+
+\subsection*{DESCRIPTION\label{pibase::data::calc_DESCRIPTION}\index{pibase::data::calc!DESCRIPTION}}
+
+
+Perl package that provides pibase data calculation routines
+
+\subsection*{AUTHOR\label{pibase::data::calc_AUTHOR}\index{pibase::data::calc!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::data::external::ASTRAL\label{pibase::data::external::ASTRAL}\index{pibase::data::external::ASTRAL}}
+
+
+Perl module of ASTRAL data routines
+
+\subsection*{DESCRIPTION\label{pibase::data::external::ASTRAL_DESCRIPTION}\index{pibase::data::external::ASTRAL!DESCRIPTION}}
+
+
+Perl package that provides interface to ASTRAL data files. Includes routine
+to run MAFFT on domain sequences in the case that the ASTRAL alignments
+are yet to be released for a new SCOP version.
+
+\subsection*{AUTHOR\label{pibase::data::external::ASTRAL_AUTHOR}\index{pibase::data::external::ASTRAL!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::data::external::PISA\label{pibase::data::external::PISA}\index{pibase::data::external::PISA}}
+
+
+Perl interface to PISA routines
+
+\subsection*{DESCRIPTION\label{pibase::data::external::PISA_DESCRIPTION}\index{pibase::data::external::PISA!DESCRIPTION}}
+
+
+Perl package that provides interface to PISA data routines
+
+\subsection*{AUTHOR\label{pibase::data::external::PISA_AUTHOR}\index{pibase::data::external::PISA!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::data::external::PQS\label{pibase::data::external::PQS}\index{pibase::data::external::PQS}}
+
+
+Perl interface to PQS routines
+
+\subsection*{DESCRIPTION\label{pibase::data::external::PQS_DESCRIPTION}\index{pibase::data::external::PQS!DESCRIPTION}}
+
+
+Perl package that provides interface to PQS data routines
+
+\subsection*{AUTHOR\label{pibase::data::external::PQS_AUTHOR}\index{pibase::data::external::PQS!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::interatomic\_contacts\label{pibase::interatomic_contacts}\index{pibase::interatomic\ contacts}}
+
+
+Perl module that deals with interatomic contacts
+
+\subsection*{DESCRIPTION\label{pibase::interatomic_contacts_DESCRIPTION}\index{pibase::interatomic contacts!DESCRIPTION}}
+
+
+The interatomic\_contacts.pm module deals with queries involving interatomic contacts.
+
+\subsection*{AUTHOR\label{pibase::interatomic_contacts_AUTHOR}\index{pibase::interatomic contacts!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::interatomic_contacts_SUBROUTINES}\index{pibase::interatomic contacts!SUBROUTINES}}
+\subsubsection*{contacts\_select()\label{pibase::interatomic_contacts_contacts_select_}\index{pibase::interatomic contacts!contacts\ select()}}
+\begin{verbatim}
+   Function:    provides a pseudo-mysql select like interface to [gzipped]
+                  contacts file in pibase.interatomic_contacts_prototype format
+   Args:        $fields - arrayref: ['bdp_id', 'resno_1', 'resno_2', 'distance']
+   Return:      results
+\end{verbatim}
+\subsubsection*{raw\_contacts\_select()\label{pibase::interatomic_contacts_raw_contacts_select_}\index{pibase::interatomic contacts!raw\ contacts\ select()}}
+\begin{verbatim}
+   Title:       raw_contacts_select()
+   Function:    Allows SQL-like SELECT from the raw interatomic contacts
+                 tables stored on disk
+   Args:        $_[0] = source_file
+                $_[1] = SQL-like SELECT query
+                $_[2] = params
+                  $_[2]->{maxdist} - distance cutoff
+   Returns:     $_ - filehandle to of results file
+\end{verbatim}
+\subsubsection*{contacts\_select\_inter()\label{pibase::interatomic_contacts_contacts_select_inter_}\index{pibase::interatomic contacts!contacts\ select\ inter()}}
+\begin{verbatim}
+   Title:       contacts_select_inter()
+   Function:    Returns inter-domain interatomic-contacts as specified by an
+                  SQL-like SELECT query from the raw interatomic contacts tables
+                  stored on disk
+   Args:        $_[0] = source_file
+                $_[1] = SQL-like SELECT query
+                $_[2] = resno_2_subset - hash from residue number to domain
+                  identifier
+                $_[3] = params
+                  $_[3]->{maxdist} - distance cutoff
+   Returns:     @_ = array of results
+\end{verbatim}
+\subsubsection*{special\_params()\label{pibase::interatomic_contacts_special_params_}\index{pibase::interatomic contacts!special\ params()}}
+\begin{verbatim}
+   Title:       special_params()
+   Function:    Specifies the parameters (like distance thresholds) for the
+                  ``special'' contacts (salt bridges, hydrogen bonds, strong
+                  hydrogen bonds, disulfide bonds)
+   Args:        $_[0] = source_file
+                $_[1] = SQL-like SELECT query
+                $_[2] = resno_2_subset - hash from residue number to domain
+                  identifier
+                $_[3] = params
+                  $_[3]->{maxdist} - distance cutoff
+   Returns:     @_ = array of results
+\end{verbatim}
+\subsubsection*{special\_contact()\label{pibase::interatomic_contacts_special_contact_}\index{pibase::interatomic contacts!special\ contact()}}
+\begin{verbatim}
+   Title:       special_contact()
+   Function:    given the distance between a pair of atom/residues, decide
+                  whether it meets dist requirements for a hbond, ssbond,
+                  or saltbridge
+   Args:        $_[0] = contacts information
+                 ->{resna1} = name of residue 1
+                 ->{atomna1} = name of atom 1
+                 ->{resna2} = name of residue 2
+                 ->{atomna2} = name of atom 2
+                 ->{dist} = distance
+                $_[1] = $t - Time::Benchmark timer handle
+   Returns:     $_ = contact category (none, salt, ssbond, hbond)
+\end{verbatim}
+\clearpage
+\section{pibase::kdcontacts\label{pibase::kdcontacts}\index{pibase::kdcontacts}}
+
+
+Package that parses kdcontacts contacts.
+
+\subsection*{DESCRIPTION\label{pibase::kdcontacts_DESCRIPTION}\index{pibase::kdcontacts!DESCRIPTION}}
+
+
+Parses kdcontacts output and displays it in a tab-delimited format ready for
+import into pibase.interatomic\_contacts
+
+\subsection*{AUTHOR\label{pibase::kdcontacts_AUTHOR}\index{pibase::kdcontacts!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::modeller\label{pibase::modeller}\index{pibase::modeller}}
+
+
+Module containing routines to call MODELLER for pibase
+
+\subsection*{DESCRIPTION\label{pibase::modeller_DESCRIPTION}\index{pibase::modeller!DESCRIPTION}}
+
+
+Performs MODELLER operations needed by pibase. (still old-school TOP format)
+
+\subsection*{AUTHOR\label{pibase::modeller_AUTHOR}\index{pibase::modeller!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::modeller_SUBROUTINES}\index{pibase::modeller!SUBROUTINES}}
+\subsubsection*{subsets\_2\_modpick()\label{pibase::modeller_subsets_2_modpick_}\index{pibase::modeller!subsets\ 2\ modpick()}}
+\begin{verbatim}
+   Function:    Converts subsets_details to MODELLER SELECTION SEGMENTS
+   Args:        $_[0] = subset_id
+                $_[1] = DBI db handle to pibase
+   Return:      $_->[] arrayref of MODELLER pick statements to select domain
+\end{verbatim}
+\subsubsection*{subsetdef\_2\_mod\_pick()\label{pibase::modeller_subsetdef_2_mod_pick_}\index{pibase::modeller!subsetdef\ 2\ mod\ pick()}}
+\begin{verbatim}
+   Function:    Converts domain definition to MODELLER pick statements
+   Args:        $_[0] = arrayref of chain_id
+                $_[1] = arrayref of start_resno
+                $_[2] = arrayref of end_resno
+   Return:      $_->[] arrayref of MODELLER pick statements to select domain
+\end{verbatim}
+\subsubsection*{get\_salign (modeller\_bin, bdp\_file)\label{pibase::modeller_get_salign_modeller_bin_bdp_file_}\index{pibase::modeller!get\ salign (modeller\ bin, bdp\ file)}}
+\begin{verbatim}
+   Title:       get_salign()
+   Function:    Calls MODELLER.SALIGN to structurally align two pdb files
+   Args:        $_->{pdb_fn_1} - name of pdb file 1
+                $_->{pdb_fn_2} - name of pdb file 2
+                $_->{modeller_bin} - name of MODELLER binary file
+\end{verbatim}
+\subsubsection*{get\_salign\_seqseq (modeller\_bin, bdp\_file)\label{pibase::modeller_get_salign_seqseq_modeller_bin_bdp_file_}\index{pibase::modeller!get\ salign\ seqseq (modeller\ bin, bdp\ file)}}
+\begin{verbatim}
+   Title:       get_salign_seqseq()
+   Function:    Calls MODELLER.SALIGN to sequence align two pdb files
+   Args:        $_->{pdb_fn_1} - name of pdb file 1
+                $_->{pdb_fn_2} - name of pdb file 2
+                $_->{modeller_bin} - name of MODELLER binary file
+\end{verbatim}
+\subsubsection*{OLD\_modeller\_subset\_sasa (modeller\_bin, bdp\_file, picks)\label{pibase::modeller_OLD_modeller_subset_sasa_modeller_bin_bdp_file_picks_}\index{pibase::modeller!OLD\ modeller\ subset\ sasa (modeller\ bin, bdp\ file, picks)}}
+\begin{verbatim}
+   Title:       OLD_modeller_subset_sasa()
+   Function:    Calculate the solvent accessible surface area of a pdb file
+   Args:        $_[0] = modeller_binary location
+                $_[1] = pdb file location
+                $_[2] = pick statements for domain
+   Returns:     $_[0] = SASA of domain (get_sasa() data structure)
+                $_[1] = error_fl - error flag
+\end{verbatim}
+
+
+Specify the temporary alignment TOP file, and the output alignment file.
+
+
+
+Generate the actual TOP file.
+
+
+
+Specify the location of the MODELLER LOG file.
+
+
+
+Run the TOP file through MODELLER.
+
+\subsubsection*{get\_sasa(modeller\_bin, bdp\_file, picks)\label{pibase::modeller_get_sasa_modeller_bin_bdp_file_picks_}\index{pibase::modeller!get\ sasa(modeller\ bin, bdp\ file, picks)}}
+\begin{verbatim}
+   Title:       get_sasa()
+   Function:    parse modeller sasa (psa)
+   Args:        $_->{surftyp} = type of MODELLER surface area
+                $_->{pdb_fn} = pdb file location
+                $_->{modeller_bin} = modeller binary file
+   Returns:     $_[0] = results
+                $_[1] = resno_rev
+                $_[2] = sasa
+                $_[3] = error_fl
+\end{verbatim}
+\subsubsection*{calc\_sasa()\label{pibase::modeller_calc_sasa_}\index{pibase::modeller!calc\ sasa()}}
+\begin{verbatim}
+   Title:       calc_sasa()
+   Function:    Run and parse modeller sasa (psa)
+   Args:        $_->{surftyp} = type of MODELLER surface area
+                $_->{pdb_fn} = pdb file location
+                $_->{modeller_bin} = modeller binary file
+   Returns:     ->{res_sasa}->{all_sum|mc_sum|sc_sum|p_sum|nonp_sum}->[i] =
+                    SASA information for residue record i
+                ->{sasa_resno_rev}->{"residuenumber_chain"} = record number
+                ->{full_sasa}->{p|nonp|mc|sc|all} = totals of residue sasa records
+                ->{error_fl} => $error_fl,
+                ->{atm_sasa}->{p|nonp|mc|sc|all} = totals of ATOM sasa records
+\end{verbatim}
+\subsubsection*{get\_dihedrals()\label{pibase::modeller_get_dihedrals_}\index{pibase::modeller!get\ dihedrals()}}
+\begin{verbatim}
+   Title:       get_dihedrals()
+   Function:    run and parse modeller dihedrals (dih)
+   Args:        $_[0] = bdp_file
+                $_[1] = modeller_bin
+   Returns:     $_[0] = results
+                $_[1] = resno_rev
+                $_[2] = error_fl
+\end{verbatim}
+\subsubsection*{get\_vol()\label{pibase::modeller_get_vol_}\index{pibase::modeller!get\ vol()}}
+\begin{verbatim}
+   Function:    Run and parse MODELLER volume (psa)
+   Args:        $_[0] = bdp_file
+                $_[1] = MODELLER binary file
+   Returns:     $_[0] = results
+                $_[1] = resno_rev
+                $_[2] = sasa
+                $_[3] = error_fl
+\end{verbatim}
+\subsubsection*{cutpdb()\label{pibase::modeller_cutpdb_}\index{pibase::modeller!cutpdb()}}
+\begin{verbatim}
+   Title:       cutpdb()
+   Function:    Uses MODELLER to extrct domain from a pdb file
+   Args:        $_[0] = MODELLER binary location
+                $_[1] = pdb file location
+                $_[2] = MODELLER pick statements
+                $_[3] = output pdb file name
+\end{verbatim}
+\begin{verbatim}
+   Returns:     $_[0] = 
+                $_[1] = resno_rev
+                $_[2] = error_fl
+\end{verbatim}
+\begin{verbatim}
+   FILE in:     pdb file ($_[1])
+   FILE out:    domain pdb file ($_[3])
+\end{verbatim}
+\subsubsection*{parse\_ali()\label{pibase::modeller_parse_ali_}\index{pibase::modeller!parse\ ali()}}
+\begin{verbatim}
+   Title:       parse_ali()
+   Function:    reads in a modeller PIR format alignment and returns residue
+                number equivalence hashes
+   Args:        $_->{ali_fn} alignment file
+                $_->{modpipe_newstyle_orderswitch}
+                  - 1 (Default) if new style MODPIPE run
+                  - reordered sequences in the alignment file
+   Results:     ->{seq} = $seq ;
+                ->{resno_start} = $resno_start ;
+                ->{resno_end} = $resno_end ;
+                ->{chain_start} = $chain_start ;
+                ->{chain_end} = $chain_end ;
+                ->{alipos_2_serial} = $alipos_2_serresno ;
+                ->{alipos_2_chainno} = $alipos_2_chainno ;
+                ->{alipos_2_resna} = $alipos_2_resna ;
+                ->{maxlength} = $maxlength;
+\end{verbatim}
+\subsubsection*{get\_resequiv()\label{pibase::modeller_get_resequiv_}\index{pibase::modeller!get\ resequiv()}}
+\begin{verbatim}
+   Title:       get_resequiv()
+   Function:    Determines a mapping between residues in two pdb files.
+                  Returns a combine serial residue number/positioning from
+                  get_resequiv_serial with residue_info()
+   Args:        ->{modeller_bin} = MODELLER binary location
+                ->{pdb_fn_1} = PDB file 1 location
+                ->{pdb_fn_2} = PDB file 2 location
+   Returns:     $->[0]->{resno1} = resno2. maps from resno1 in first pdb file
+                  to the aligned residue in the second pdb file
+                $->[1]->{resno2} = resno1. maps from resno2 in second pdb file
+                  to the aligned residue in the first pdb file
+\end{verbatim}
+\subsubsection*{get\_resequiv\_serial()\label{pibase::modeller_get_resequiv_serial_}\index{pibase::modeller!get\ resequiv\ serial()}}
+\begin{verbatim}
+   Title:       get_resequiv_serial()
+   Function:    Determines residue equivalencies between two pdb files by
+                  aligning them structurally using MODELLER.SALIGN
+   Args:        ->{modeller_bin} = MODELLER binary location
+                ->{pdb_fn_1} = location of pdb file name 1
+                ->{pdb_fn_2} = location of pdb file name 2
+   Returns:     parse_ali() alignment structure
+\end{verbatim}
+\clearpage
+\section{pibase::pilig\label{pibase::pilig}\index{pibase::pilig}}
+
+
+Perl module for pibase-ligbase overlap calculations
+
+\subsection*{DESCRIPTION\label{pibase::pilig_DESCRIPTION}\index{pibase::pilig!DESCRIPTION}}
+
+
+Perl module with routines to cross-query pibase and ligbase
+to get small molecule - protein interaction site overlap
+statistics
+
+\subsection*{AUTHOR\label{pibase::pilig_AUTHOR}\index{pibase::pilig!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::pilig\label{pibase::pilig}\index{pibase::pilig}}
+
+
+Perl module for pibase-ligbase overlap calculations
+
+\subsection*{DESCRIPTION\label{pibase::pilig_DESCRIPTION}\index{pibase::pilig!DESCRIPTION}}
+
+
+Perl module with routines to cross-query pibase and ligbase
+to get small molecule - protein interaction site overlap
+statistics
+
+\subsection*{AUTHOR\label{pibase::pilig_AUTHOR}\index{pibase::pilig!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::pilig\label{pibase::pilig}\index{pibase::pilig}}
+
+
+Perl module for pibase-ligbase overlap calculations
+
+\subsection*{DESCRIPTION\label{pibase::pilig_DESCRIPTION}\index{pibase::pilig!DESCRIPTION}}
+
+
+Perl module with routines to cross-query pibase and ligbase
+to get small molecule - protein interaction site overlap
+statistics
+
+\subsection*{AUTHOR\label{pibase::pilig_AUTHOR}\index{pibase::pilig!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\clearpage
+\section{pibase::raw\_table\_specs- module that specifies pibase table structures\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures}\index{pibase::raw\ table\ specs- module that specifies pibase table structures}}
+
+
+
+
+\subsection*{VERSION\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures_VERSION}\index{pibase::raw table specs- module that specifies pibase table structures!VERSION}}
+
+
+fpd100910\_1640
+
+\subsection*{DESCRIPTION\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures_DESCRIPTION}\index{pibase::raw table specs- module that specifies pibase table structures!DESCRIPTION}}
+
+
+The raw\_table\_specs module contains a hard-coded description of the PIBASE
+table structures. This file is automatically generated by the
+pibase::create\_raw\_table\_specs
+
+\subsection*{AUTHOR\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures_AUTHOR}\index{pibase::raw table specs- module that specifies pibase table structures!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures_SUBROUTINES}\index{pibase::raw table specs- module that specifies pibase table structures!SUBROUTINES}}
+\subsubsection*{full\_table\_specs()\label{pibase::raw_table_specs-_module_that_specifies_pibase_table_structures_full_table_specs_}\index{pibase::raw table specs- module that specifies pibase table structures!full\ table\ specs()}}
+\begin{verbatim}
+   Title:       full_table_specs()
+   Args:        none
+   Returns:     $->{table_name}->{prikey} = primary key field
+                $->{table_name}->{field_name}->[i] = name of ith field
+                $->{table_name}->{field_spec}->[i] = type of ith field
+\end{verbatim}
+\clearpage
+\section{pibase::residue\_math\label{pibase::residue_math}\index{pibase::residue\ math}}
+
+
+Package that handles residue number operations
+
+\subsection*{DESCRIPTION\label{pibase::residue_math_DESCRIPTION}\index{pibase::residue math!DESCRIPTION}}
+
+
+The pibase::resno module performs common operations on residue numbers.
+
+\subsection*{AUTHOR\label{pibase::residue_math_AUTHOR}\index{pibase::residue math!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::residue_math_SUBROUTINES}\index{pibase::residue math!SUBROUTINES}}
+\subsubsection*{residue\_int(resno)\label{pibase::residue_math_residue_int_resno_}\index{pibase::residue math!residue\ int(resno)}}
+\begin{verbatim}
+   Title:       residue_int()
+   Function:    Seperates the integer and insertion code of a residue number
+      NOTE: assumes insertion code is always alphanumeric
+   Args:        residue number (5 character - number and insertion code)
+   Returns:     $_[0] integer portion of the residue number
+                $_[1] insertion code of the residue number
+\end{verbatim}
+\subsubsection*{residue\_add(residue number, increment)\label{pibase::residue_math_residue_add_residue_number_increment_}\index{pibase::residue math!residue\ add(residue number, increment)}}
+\begin{verbatim}
+   Title:       residue_add()
+   Function:    Adds an integer increment to a residue number
+   Args:        $_[0] = residue number (full)
+                $_[1] = increment
+   Returns:     $_ = new residue number
+\end{verbatim}
+\subsubsection*{residue\_comparison(resno1, resno2)\label{pibase::residue_math_residue_comparison_resno1_resno2_}\index{pibase::residue math!residue\ comparison(resno1, resno2)}}
+\begin{verbatim}
+   Title:       residue_comparison(resno1, resno2)
+   Function:    Compares 2 residues to determine which one is greater.
+   Args:        $_[0] = residue number 1
+                $_[2] = residue number 2
+   Returns:     $_ = comparison result: 0 = equal,
+                                        1 = first is greater,
+                                        2 = second is greater.
+\end{verbatim}
+\subsubsection*{residue\_inrange(resno, start, end)\label{pibase::residue_math_residue_inrange_resno_start_end_}\index{pibase::residue math!residue\ inrange(resno, start, end)}}
+\begin{verbatim}
+   Title:       residue_inrange(resno, start, end)
+   Function:    Checks if a residue number is within a range of residue numbers.
+   Args:        $_[0] = residue number
+                $_[1] = start residue number range
+                $_[1] = end residue number range
+   Returns:     Comparison result: 0 = out of range, 1 = in range.
+\end{verbatim}
+\clearpage
+\section{pibase::specs\label{pibase::specs}\index{pibase::specs}}
+
+
+Perl package containing definition of pibase table structures
+
+\subsection*{DESCRIPTION\label{pibase::specs_DESCRIPTION}\index{pibase::specs!DESCRIPTION}}
+
+
+Contains pibase table structure definitions
+
+\subsection*{AUTHOR\label{pibase::specs_AUTHOR}\index{pibase::specs!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::specs_SUBROUTINES}\index{pibase::specs!SUBROUTINES}}
+\subsubsection*{table\_spec(@tablelist)\label{pibase::specs_table_spec_tablelist_}\index{pibase::specs!table\ spec(@tablelist)}}
+\begin{verbatim}
+   Title:       table_spec()
+   Function:    Return mysql DDL format table specs.
+   Returns:     $_ hashref pointing from tablename to specs
+                  $_->{i} = specs for ith table
+\end{verbatim}
+\subsubsection*{SUB sql\_table\_spec(@tablelist)\label{pibase::specs_SUB_sql_table_spec_tablelist_}\index{pibase::specs!SUB sql\ table\ spec(@tablelist)}}
+\begin{verbatim}
+   Title:       sql_table_spec()
+   Function:    Return mysql DDL format table specs.
+   Args:        $_ hashref pointing from tablename to specs
+                $_->{i} = specs for ith table
+\end{verbatim}
+\clearpage
+\section{pibase::tables\_on\_disk\label{pibase::tables_on_disk}\index{pibase::tables\ on\ disk}}
+
+
+Perl module that provides an SQL like query interface to tables stored on disk.
+
+\subsection*{DESCRIPTION\label{pibase::tables_on_disk_DESCRIPTION}\index{pibase::tables on disk!DESCRIPTION}}
+
+
+Perl module to interface with tables stored on disk.
+
+\subsection*{AUTHOR\label{pibase::tables_on_disk_AUTHOR}\index{pibase::tables on disk!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::tables_on_disk_SUBROUTINES}\index{pibase::tables on disk!SUBROUTINES}}
+\subsubsection*{select\_tod()\label{pibase::tables_on_disk_select_tod_}\index{pibase::tables on disk!select\ tod()}}
+\begin{verbatim}
+   Title:       select_tod()
+   Function:    provides a pseudo-mysql select like interface to [gzipped]
+                contacts file in pibase.interatomic_contacts_prototype format
+\end{verbatim}
+\begin{verbatim}
+   Args:        $_[0]- source file
+                $_[1]- arrayref ['bdp_id', 'resno_1', 'resno_2', 'distance']
+                $_[2]- table name
+                $_[3]- where clause
+\end{verbatim}
+\begin{verbatim}
+   Returns:     @_ - array of arrays
+                $_[i][j] = jth field of ith result
+\end{verbatim}
+\clearpage
+\section{pibase::web\label{pibase::web}\index{pibase::web}}
+
+
+Collection of routines for PIBASE web interface
+
+\subsection*{DESCRIPTION\label{pibase::web_DESCRIPTION}\index{pibase::web!DESCRIPTION}}
+
+
+This module provides routines for the PIBASE web interface.
+
+\subsection*{AUTHOR\label{pibase::web_AUTHOR}\index{pibase::web!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::web_SUBROUTINES}\index{pibase::web!SUBROUTINES}}
+\subsubsection*{greeting()\label{pibase::web_greeting_}\index{pibase::web!greeting()}}
+\begin{verbatim}
+   Title:       greeting()
+   Function:    Provides pibase web site greeting
+   Args:        $_->{base} [optional] = website base url
+   Return:      html code for greeting section of pibase webpage
+\end{verbatim}
+\subsubsection*{closing()\label{pibase::web_closing_}\index{pibase::web!closing()}}
+\begin{verbatim}
+   Title:       closing()
+   Function:    Provides pibase web site closing
+   Args:        $_->{base} [optional] = website base url
+   Return:      html code for closing section of pibase webpage
+\end{verbatim}
+\subsubsection*{find\_object()\label{pibase::web_find_object_}\index{pibase::web!find\ object()}}
+\begin{verbatim}
+   Title:       find_object()
+   Function:    Routine for finding complex, interface, or domain
+   Args:        $_->{base} [optional] = website base url
+   Return:      STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{display\_results()\label{pibase::web_display_results_}\index{pibase::web!display\ results()}}
+\begin{verbatim}
+   Title:       display_results()
+   Function:    Formats a list of query results (find_object()) for html viewing
+   Args:        $_->{input}->{object_type} = complexes|interfaces|domains
+                $_->{details_link}->{object_type} = construct for detail URL link
+                $_->{view_link}->{object_type} = construct for viewer URL link
+                $_->{results_field}->[i] = ith result field header
+                $_->{data}->[i]->[j] = jth field of ith record
+                $_->{cgi_h} = CGI handle
+                $_->{base} [optional] = website base url
+                $_->{basecgi} [optional] = website base url
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{get\_object\_details()\label{pibase::web_get_object_details_}\index{pibase::web!get\ object\ details()}}
+\begin{verbatim}
+   Title:       get_object_details()
+   Function:    Formats a list of query results (find_object()) for html viewing
+   Args:        $_->{input}->{object_type} = complexes|interfaces|domains
+                $_->{details_link}->{object_type} = construct for detail URL link
+                $_->{view_link}->{object_type} = construct for viewer URL link
+                $_->{results_field}->[i] = ith result field header
+                $_->{data}->[i]->[j] = jth field of ith record
+                $_->{cgi_h} = CGI handle
+                $_->{base} [optional] = website base url
+                $_->{basecgi} [optional] = website base url
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{foldtext()\label{pibase::web_foldtext_}\index{pibase::web!foldtext()}}
+\begin{verbatim}
+   Title:       foldtext()
+   Function:    Wrapping code for a string with specified folding characters
+   Args:        $_->{string} = 'ORIGINALSTRING'
+                $_->{wrap} = wrapping length
+                $_->{foldchar} = folding charcter [optional - defaults to newline]
+   Returns:     $_ = "ORIG\nINAL\nSTRI\nNG" ;
+\end{verbatim}
+\subsubsection*{get\_color\_codes()\label{pibase::web_get_color_codes_}\index{pibase::web!get\ color\ codes()}}
+\begin{verbatim}
+   Title:       get_color_codes()
+   Function:    Returns rgb decimal and hex values for a specified color name
+   Args:        $_->{name} = color name
+   Returns:     $_->{rgb} = "R G B" (0-1 scale)
+                $_->{rgb255} => "R,G,B" (0-255 scale)
+                $_->{hexcode} => "RRGGBB" hex code
+\end{verbatim}
+\subsubsection*{pngconvert\_bdp\_interaction\_topology\_graph()\label{pibase::web_pngconvert_bdp_interaction_topology_graph_}\index{pibase::web!pngconvert\ bdp\ interaction\ topology\ graph()}}
+\begin{verbatim}
+   Title:       pngconvert_bdp_interaction_topology_graph()
+   Function:    Iterates over all eps format topology graphs and converts to
+                 PNG using ImageMagick
+   Args:        $_->{pibase_specs} = pibase_specs [optional - if not get_specs()]
+   Returns:     Nothing
+\end{verbatim}
+\subsubsection*{view\_object()\label{pibase::web_view_object_}\index{pibase::web!view\ object()}}
+\begin{verbatim}
+   Title:       view_object()
+   Function:    Retrieves and displays to STDOUT PIBASE structure file for
+                 domain, interface, or complex
+   Args:        $_->{subset_id} = subset_id of domain
+                $_->{subset_id_1} = subset_id of domain 1 of an interface
+                $_->{subset_id_2} = subset_id of domain 2 of an interface
+                $_->{bdp_id} = bdp_id of a complex
+                $_->{subset_source_id} = domain classification system of a complex
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{view\_interface\_subset2rasmol()\label{pibase::web_view_interface_subset2rasmol_}\index{pibase::web!view\ interface\ subset2rasmol()}}
+\begin{verbatim}
+   Title:       view_object()
+   Function:    Returns rasmol script commands to define a series of domains
+   Args:        $_->{dbh} = PIBASE database handle
+                $_->{subsets} = [subset_id_1, 2, ...]
+                $_->{colors} = [name of color to use for domain 1, 2, ...]
+   Returns:     STDOUT prints rasmol script commands
+\end{verbatim}
+\clearpage
+\section{pibase::web\_pilig\label{pibase::web_pilig}\index{pibase::web\ pilig}}
+
+
+Collection of routines for PIBASE.ligands web interface
+
+\subsection*{DESCRIPTION\label{pibase::web_pilig_DESCRIPTION}\index{pibase::web pilig!DESCRIPTION}}
+
+
+This module provides routines for the PIBASE.ligands web interface.
+
+\subsection*{AUTHOR\label{pibase::web_pilig_AUTHOR}\index{pibase::web pilig!AUTHOR}}
+
+
+Fred P. Davis, HHMI-JFRC (davisf@janelia.hhmi.org)
+
+\subsection*{SUBROUTINES\label{pibase::web_pilig_SUBROUTINES}\index{pibase::web pilig!SUBROUTINES}}
+\subsubsection*{greeting()\label{pibase::web_pilig_greeting_}\index{pibase::web pilig!greeting()}}
+\begin{verbatim}
+   Title:       greeting()
+   Function:    Provides pibase web site greeting
+   Args:        $_->{base} [optional] = website base url
+   Return:      html code for greeting section of pibase webpage
+\end{verbatim}
+\subsubsection*{closing()\label{pibase::web_pilig_closing_}\index{pibase::web pilig!closing()}}
+\begin{verbatim}
+   Title:       closing()
+   Function:    Provides pibase web site closing
+   Args:        $_->{base} [optional] = website base url
+   Return:      html code for closing section of pibase webpage
+\end{verbatim}
+\subsubsection*{find\_object()\label{pibase::web_pilig_find_object_}\index{pibase::web pilig!find\ object()}}
+\begin{verbatim}
+   Title:       find_object()
+   Function:    Routine for finding complex, interface, or domain
+   Args:        $_->{base} [optional] = website base url
+   Return:      STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{display\_results()\label{pibase::web_pilig_display_results_}\index{pibase::web pilig!display\ results()}}
+\begin{verbatim}
+   Title:       display_results()
+   Function:    Formats a list of query results (find_object()) for html viewing
+   Args:        $_->{input}->{object_type} = complexes|interfaces|domains
+                $_->{details_link}->{object_type} = construct for detail URL link
+                $_->{view_link}->{object_type} = construct for viewer URL link
+                $_->{results_field}->[i] = ith result field header
+                $_->{data}->[i]->[j] = jth field of ith record
+                $_->{cgi_h} = CGI handle
+                $_->{base} [optional] = website base url
+                $_->{basecgi} [optional] = website base url
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{get\_object\_details()\label{pibase::web_pilig_get_object_details_}\index{pibase::web pilig!get\ object\ details()}}
+\begin{verbatim}
+   Title:       get_object_details()
+   Function:    Formats a list of query results (find_object()) for html viewing
+   Args:        $_->{input}->{object_type} = complexes|interfaces|domains
+                $_->{details_link}->{object_type} = construct for detail URL link
+                $_->{view_link}->{object_type} = construct for viewer URL link
+                $_->{results_field}->[i] = ith result field header
+                $_->{data}->[i]->[j] = jth field of ith record
+                $_->{cgi_h} = CGI handle
+                $_->{base} [optional] = website base url
+                $_->{basecgi} [optional] = website base url
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{foldtext()\label{pibase::web_pilig_foldtext_}\index{pibase::web pilig!foldtext()}}
+\begin{verbatim}
+   Title:       foldtext()
+   Function:    Wrapping code for a string with specified folding characters
+   Args:        $_->{string} = 'ORIGINALSTRING'
+                $_->{wrap} = wrapping length
+                $_->{foldchar} = folding charcter [optional - defaults to newline]
+   Returns:     $_ = "ORIG\nINAL\nSTRI\nNG" ;
+\end{verbatim}
+\subsubsection*{get\_color\_codes()\label{pibase::web_pilig_get_color_codes_}\index{pibase::web pilig!get\ color\ codes()}}
+\begin{verbatim}
+   Title:       get_color_codes()
+   Function:    Returns rgb decimal and hex values for a specified color name
+   Args:        $_->{name} = color name
+   Returns:     $_->{rgb} = "R G B" (0-1 scale)
+                $_->{rgb255} => "R,G,B" (0-255 scale)
+                $_->{hexcode} => "RRGGBB" hex code
+\end{verbatim}
+\subsubsection*{pngconvert\_bdp\_interaction\_topology\_graph()\label{pibase::web_pilig_pngconvert_bdp_interaction_topology_graph_}\index{pibase::web pilig!pngconvert\ bdp\ interaction\ topology\ graph()}}
+\begin{verbatim}
+   Title:       pngconvert_bdp_interaction_topology_graph()
+   Function:    Iterates over all eps format topology graphs and converts to
+                 PNG using ImageMagick
+   Args:        $_->{pibase_specs} = pibase_specs [optional - if not get_specs()]
+   Returns:     Nothing
+\end{verbatim}
+\subsubsection*{view\_object()\label{pibase::web_pilig_view_object_}\index{pibase::web pilig!view\ object()}}
+\begin{verbatim}
+   Title:       view_object()
+   Function:    Retrieves and displays to STDOUT PIBASE structure file for
+                 domain, interface, or complex
+   Args:        $_->{subset_id} = subset_id of domain
+                $_->{subset_id_1} = subset_id of domain 1 of an interface
+                $_->{subset_id_2} = subset_id of domain 2 of an interface
+                $_->{bdp_id} = bdp_id of a complex
+                $_->{subset_source_id} = domain classification system of a complex
+   Returns:     STDOUT html page of search results
+\end{verbatim}
+\subsubsection*{view\_interface\_subset2rasmol()\label{pibase::web_pilig_view_interface_subset2rasmol_}\index{pibase::web pilig!view\ interface\ subset2rasmol()}}
+\begin{verbatim}
+   Title:       view_object()
+   Function:    Returns rasmol script commands to define a series of domains
+   Args:        $_->{dbh} = PIBASE database handle
+                $_->{subsets} = [subset_id_1, 2, ...]
+                $_->{colors} = [name of color to use for domain 1, 2, ...]
+   Returns:     STDOUT prints rasmol script commands
+\end{verbatim}
+\printindex
+
+\end{document}

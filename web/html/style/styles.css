@@ -1,0 +1,119 @@
+A {
+	FONT-SIZE: 12px; LINE-HEIGHT: 18px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+A:link {
+	FONT-SIZE: 12px; LINE-HEIGHT: 18px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+A:visited {
+	FONT-SIZE: 12px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+A:hover {
+	FONT-SIZE: 12px; TEXT-DECORATION: none; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+
+.nav {
+	FONT-SIZE: 12px; COLOR: white; LINE-HEIGHT: 18px; TEXT-DECORATION: none; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.nav:link {
+	FONT-SIZE: 12px; COLOR: white; LINE-HEIGHT: 18px; TEXT-DECORATION: none; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.nav:visited {
+	FONT-SIZE: 12px; COLOR: white; TEXT-DECORATION: none; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.nav:hover {
+	FONT-SIZE: 12px; COLOR: silver; TEXT-DECORATION: underline; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+
+.bodytext {
+	FONT-SIZE: 12px; COLOR: black; LINE-HEIGHT: 18px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.large {
+	FONT-SIZE: 14px; COLOR: black; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.small {
+	FONT-SIZE: 11px; COLOR: white; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.smaller {
+	FONT-SIZE: 9px; COLOR: white; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.xsmaller {
+	FONT-SIZE: 8px; COLOR: white; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.xxsmaller {
+	FONT-SIZE: 6px; COLOR: white; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.bsmaller {
+	FONT-SIZE: 9px; COLOR: black; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.bxsmaller {
+	FONT-SIZE: 8px; COLOR: black; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.bxxsmaller {
+	FONT-SIZE: 6px; COLOR: black; LINE-HEIGHT: 10px; FONT-FAMILY: trebuchet ms, Helvetica, Verdana, Geneva, Arial
+}
+.treven{
+background: #b6b6b6;
+}
+.trodd{
+background: #f5f5f5;
+}
+
+.black{background: rgb(0,0,0)}
+.red{background: rgb(255,0,0)}
+.blue{background: rgb(0,0,255)}
+.green{background: rgb(0,255,0)}
+.brown{background: rgb(164,42,42)}
+.grey{background: rgb(189,189,189)}
+.orange{background: rgb(255,164,0)}
+.AliceBlue{background: rgb(239,248,255)}
+.RosyBrown{background: rgb(187,143,143)}
+.beige{background: rgb(245,245,220)}
+.coral{background: rgb(255,126,80)}
+.sienna{background: rgb(159,82,44)}
+.orchid{background: rgb(218,111,213)}
+.plum{background: rgb(221,159,221)}
+.bisque{background: rgb(255,227,196)}
+.khaki{background: rgb(239,230,139)}
+.OliveDrab{background: rgb(107,142,34)}
+.SaddleBrown{background: rgb(138,69,19)}
+.LimeGreen{background: rgb(49,205,49)}
+.turquoise{background: rgb(64,223,208)}
+.SteelBlue{background: rgb(70,130,180)}
+.CornflowerBlue{background: rgb(99,148,236)}
+.DeepSkyBlue{background: rgb(0,190,255)}
+.aquamarine{background: rgb(126,255,211)}
+.chocolate{background: rgb(210,105,30)}
+.SpringGreen{background: rgb(0,255,126)}
+.IndianRed{background: rgb(205,92,92)}
+.DarkViolet{background: rgb(147,0,210)}
+.maroon{background: rgb(175,47,95)}
+
+.fgblack{text: rgb(0,0,0)}
+.fgred{text: rgb(255,0,0)}
+.fgblue{text: rgb(0,0,255)}
+.fggreen{text: rgb(0,255,0)}
+.fgbrown{text: rgb(164,42,42)}
+.fggrey{text: rgb(189,189,189)}
+.fgorange{text: rgb(255,164,0)}
+.fgAliceBlue{text: rgb(239,248,255)}
+.fgRosyBrown{text: rgb(187,143,143)}
+.fgbeige{text: rgb(245,245,220)}
+.fgcoral{text: rgb(255,126,80)}
+.fgsienna{text: rgb(159,82,44)}
+.fgorchid{text: rgb(218,111,213)}
+.fgplum{text: rgb(221,159,221)}
+.fgbisque{text: rgb(255,227,196)}
+.fgkhaki{text: rgb(239,230,139)}
+.fgOliveDrab{text: rgb(107,142,34)}
+.fgSaddleBrown{text: rgb(138,69,19)}
+.fgLimeGreen{text: rgb(49,205,49)}
+.fgturquoise{text: rgb(64,223,208)}
+.fgSteelBlue{text: rgb(70,130,180)}
+.fgCornflowerBlue{text: rgb(99,148,236)}
+.fgDeepSkyBlue{text: rgb(0,190,255)}
+.fgaquamarine{text: rgb(126,255,211)}
+.fgchocolate{text: rgb(210,105,30)}
+.fgSpringGreen{text: rgb(0,255,126)}
+.fgIndianRed{text: rgb(205,92,92)}
+.fgDarkViolet{text: rgb(147,0,210)}
+.fgmaroon{text: rgb(175,47,95)}
