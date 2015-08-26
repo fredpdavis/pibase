@@ -6,7 +6,9 @@ Copyright 2005,2010 Fred P. Davis
 
 http://fredpdavis.com/pibase
 
-NOTE: The PIBASE server was retired in Aug 2015. The code is maintained here for archiving.
+NOTE: The PIBASE server was retired in August 2015. The code is maintained here
+for archiving. A mysql dump of the database is available at
+https://zenodo.org/record/29589
 
 o Using PIBASE
 --------------
